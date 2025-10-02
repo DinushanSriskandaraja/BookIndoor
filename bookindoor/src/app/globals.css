@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+/* =======================
+   Root Variables
+   ======================= */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary: #4f46e5; /* Indigo 600 */
+  --secondary: #6366f1; /* Indigo 500 */
+  --accent: #facc15; /* Amber 400 */
+  --card-bg: #f9fafb;
+  --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  --border-radius: 0.75rem;
+  --font-sans: 'Arial', 'Helvetica', sans-serif;
+  --font-mono: 'Courier New', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0e1b43;
+    --foreground: #ededed;
+    --card-bg: #1a1f3d;
+    --card-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+}
+
+/* =======================
+   Global Styles
+   ======================= */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  transition: background 0.3s, color 0.3s;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+a:hover {
+  color: var(--secondary);
+}
+
+/* =======================
+   Buttons
+   ======================= */
+button {
+  font-family: var(--font-sans);
+  border-radius: var(--border-radius);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button.primary {
+  background-color: var(--primary);
+  color: #fff;
+}
+
+button.primary:hover {
+  background-color: var(--secondary);
+}
+
+button.secondary {
+  background-color: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+button.secondary:hover {
+  background-color: var(--primary);
+  color: #fff;
+}
+
+/* =======================
+   Cards
+   ======================= */
+.card {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  padding: 1rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* =======================
+   Typography
+   ======================= */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+p {
+  color: var(--foreground);
+}
+
+small {
+  color: #0f398e; /* Tailwind gray-500 */
+}
+
+/* =======================
+   Containers & Layout
+   ======================= */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =======================
+   Forms & Inputs
+   ======================= */
+input, select, textarea {
+  border: 1px solid #d1d5db; /* Tailwind gray-300 */
+  border-radius: var(--border-radius);
+  padding: 0.5rem;
+  width: 100%;
+  transition: border-color 0.3s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* =======================
+   Utility Classes
+   ======================= */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.rounded-xl {
+  border-radius: 1rem;
+}
