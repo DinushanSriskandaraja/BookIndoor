@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import GroundCard from "@/components/GroundCard";
-import BookingSummaryTab from "@/components/BookingSummaryTab";
-import BookingDetailsTab from "@/components/BookingDetailsTab";
 
 interface Ground {
   id: number;
@@ -80,8 +78,7 @@ export default function AdminPage() {
         <div className="flex gap-4 mb-8 border-b border-gray-200 pb-2">
           {[
             { key: "grounds", label: "Grounds" },
-            { key: "summary", label: "Booking Summary" },
-            { key: "details", label: "Booking Details" },
+           
           ].map((tab) => (
             <button
               key={tab.key}
@@ -135,17 +132,7 @@ export default function AdminPage() {
             </>
           )}
 
-          {activeTab === "summary" && (
-            <div className="max-w-full overflow-hidden">
-              <BookingSummaryTab selectedSport={selectedSport} />
-            </div>
-          )}
-
-          {activeTab === "details" && (
-            <div className="max-w-full overflow-hidden">
-              <BookingDetailsTab selectedSport={selectedSport} />
-            </div>
-          )}
+         
         </div>
       </div>
     </div>

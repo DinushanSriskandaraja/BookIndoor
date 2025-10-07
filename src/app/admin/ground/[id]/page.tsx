@@ -1,16 +1,23 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { JSX, useState } from "react";
 import Link from "next/link";
 import {
   MapPinIcon,
   StarIcon,
   PencilSquareIcon,
   TrashIcon,
+  WifiIcon,
+  TicketIcon,
+  UserGroupIcon,
+  Cog6ToothIcon,
+  ClockIcon,
 } from "@heroicons/react/24/solid";
 
-import Calendar from "@/components/Calendar"; // ✅ replaced BookingCalendarTab import
+import Calendar from "@/components/Calendar";
+import BookingDetailsTab from "@/components/BookingDetailsTab";
+import BookingSummaryTab from "@/components/BookingSummaryTab";
 
 interface Ground {
   id: string;
@@ -40,6 +47,14 @@ const mockBookedSlots: Record<string, string[]> = {
   Basketball: ["2025-10-03 14:00"],
 };
 
+// Map facility names to icons
+const facilityIcons: Record<string, JSX.Element> = {
+  "Locker Room": <UserGroupIcon className="w-5 h-5" />,
+  Parking: <Cog6ToothIcon className="w-5 h-5" />,
+  Cafeteria: <TicketIcon className="w-5 h-5" />,
+  "Wi-Fi": <WifiIcon className="w-5 h-5" />,
+};
+
 export default function AdminGroundDetails() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -47,15 +62,17 @@ export default function AdminGroundDetails() {
   const ground = mockGround;
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"calendar" | "details" | "summary">(
+    "calendar"
+  );
 
   const prevImage = () =>
-    setCurrentImage((prev) =>
-      prev === 0 ? ground.images.length - 1 : prev - 1
-    );
+    setCurrentImage((prev) => (prev === 0 ? ground.images.length - 1 : prev - 1));
   const nextImage = () =>
-    setCurrentImage((prev) =>
-      prev === ground.images.length - 1 ? 0 : prev + 1
-    );
+    setCurrentImage((prev) => (prev === ground.images.length - 1 ? 0 : prev + 1));
+
+  const glassCardClasses =
+    "bg-green-100/20 backdrop-blur-md border border-green-700/30 rounded-2xl shadow-lg p-6";
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-10">
@@ -81,14 +98,14 @@ export default function AdminGroundDetails() {
       </div>
 
       {/* Ground Info */}
-      <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col sm:flex-row justify-between gap-6">
+      <div className={`${glassCardClasses} flex flex-col sm:flex-row justify-between gap-6`}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
             {ground.name}
-            <StarIcon className="w-6 h-6 text-yellow-500" />
+            <StarIcon className="w-6 h-6 text-yellow-400" />
           </h1>
-          <p className="text-gray-600 mt-2 flex items-center gap-2">
-            <MapPinIcon className="w-5 h-5 text-indigo-600" />
+          <p className="text-green-200 mt-2 flex items-center gap-2">
+            <MapPinIcon className="w-5 h-5 text-green-400" />
             {ground.location}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -96,7 +113,7 @@ export default function AdminGroundDetails() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-indigo-600 hover:underline text-sm ml-2"
+              className="text-green-300 hover:underline text-sm ml-2"
             >
               View on Map
             </a>
@@ -105,8 +122,9 @@ export default function AdminGroundDetails() {
             {ground.facilities.map((facility) => (
               <span
                 key={facility}
-                className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium"
+                className="flex items-center gap-1 px-4 py-2 bg-green-800 text-white rounded-full text-sm font-medium"
               >
+                {facilityIcons[facility] || <ClockIcon className="w-5 h-5" />}
                 {facility}
               </span>
             ))}
@@ -128,8 +146,8 @@ export default function AdminGroundDetails() {
       </div>
 
       {/* Sports Selection */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <div className={glassCardClasses}>
+        <h2 className="text-xl font-semibold text-white mb-4">
           Manage Sport Prices or Availability
         </h2>
         <div className="flex flex-wrap gap-4">
@@ -139,8 +157,8 @@ export default function AdminGroundDetails() {
               onClick={() => setSelectedSport(sport.name)}
               className={`px-5 py-3 rounded-xl border font-semibold transition ${
                 selectedSport === sport.name
-                  ? "bg-indigo-600 text-white border-indigo-600 scale-105"
-                  : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-400"
+                  ? "bg-green-600 text-white border-green-600 scale-105"
+                  : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
               }`}
             >
               {sport.name} – Rs {sport.price}
@@ -149,19 +167,53 @@ export default function AdminGroundDetails() {
         </div>
       </div>
 
-      {/* Calendar Component (Replaced) */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        {selectedSport ? (
-          <Calendar
-            bookedSlots={mockBookedSlots[selectedSport] || []}
-            groundName={`${ground.name} - ${selectedSport}`}
-          />
-        ) : (
-          <p className="text-gray-500 text-center py-6">
-            Please select a sport to book the ground.
-          </p>
-        )}
-      </div>
+      {/* Booking Tabs - only show if a sport is selected */}
+      {selectedSport ? (
+        <div className={glassCardClasses}>
+          {/* Tabs Navigation */}
+          <div className="flex gap-4 mb-6 border-b border-green-700 pb-2 justify-center">
+            {[
+              { key: "calendar", label: "Booking Calendar" },
+              { key: "summary", label: "Booking Summary" },
+              { key: "details", label: "Booking Details" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() =>
+                  setActiveTab(tab.key as "calendar" | "summary" | "details")
+                }
+                className={`px-4 py-2 rounded-t-lg font-medium transition ${
+                  activeTab === tab.key
+                    ? "text-green-900 border-b-2 border-green-600"
+                    : "text-green-700 hover:text-green-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div className="transition-all duration-300">
+            {activeTab === "calendar" && (
+              <Calendar
+                bookedSlots={mockBookedSlots[selectedSport] || []}
+                groundName={`${ground.name} - ${selectedSport}`}
+              />
+            )}
+            {activeTab === "summary" && (
+              <BookingSummaryTab selectedSport={selectedSport || undefined} />
+            )}
+            {activeTab === "details" && (
+              <BookingDetailsTab selectedSport={selectedSport || undefined} />
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className="text-center text-green-900 py-6">
+          Please select a sport to view booking information.
+        </p>
+      )}
     </div>
   );
 }

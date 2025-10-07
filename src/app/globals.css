@@ -39,13 +39,13 @@ body {
 }
 
 a {
-  color: var(--primary);
+  color: #239b57;
   text-decoration: none;
   transition: color 0.3s;
 }
 
 a:hover {
-  color: var(--secondary);
+  color:  #296443;
 }
 
 /* =======================
@@ -99,16 +99,16 @@ button.secondary:hover {
    Typography
    ======================= */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  color: #171717;
+  font-weight: 800;
+  color: #2d8754;
 }
 
-/* p {
-  color: var(--foreground);
-} */
+p {
+  color: #296443;
+}
 
 small {
-  color: #0f398e; /* Tailwind gray-500 */
+  color: #2d8754; /* Tailwind gray-500 */
 }
 
 /* =======================
@@ -135,7 +135,7 @@ input, select, textarea {
   padding: 0.5rem;
   width: 100%;
   transition: border-color 0.3s;
-  color: #171717;
+  color: #022e18;
 }
 /* 
 input:focus, select:focus, textarea:focus {
@@ -155,5 +155,5 @@ input:focus, select:focus, textarea:focus {
 }
 
 label {
-  color: #171717;
+  color: #096539;
 }

@@ -4,12 +4,19 @@ import { useRouter } from "next/navigation";
 
 interface CalendarProps {
   bookedSlots?: string[]; // "YYYY-MM-DD HH:mm"
-  groundName: string; // Pass ground name dynamically
+  groundName: string;
+  isAdmin?: boolean; // Admin mode
+  onSlotClick?: (slot: string) => void; // Callback when admin clicks a booked slot
 }
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function Calendar({ bookedSlots = [], groundName }: CalendarProps) {
+export default function Calendar({
+  bookedSlots = [],
+  groundName,
+  isAdmin = false,
+  onSlotClick,
+}: CalendarProps) {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -67,10 +74,9 @@ export default function Calendar({ bookedSlots = [], groundName }: CalendarProps
       return;
     }
 
-    // Navigate to payment page with booking details as query params
     const query = new URLSearchParams({
       date: selectedDate!,
-      times: selectedTimes.join(","), // convert array to string
+      times: selectedTimes.join(","),
       ground: groundName,
     }).toString();
 
@@ -81,10 +87,8 @@ export default function Calendar({ bookedSlots = [], groundName }: CalendarProps
     <div className="mt-6">
       <h3 className="text-xl font-bold mb-4 text-gray-800">Booking Calendar</h3>
 
-      {/* Calendar */}
       {!showTimePicker && (
         <>
-          {/* Month Navigation */}
           <div className="flex justify-between items-center mb-4">
             <button
               onClick={prevMonth}
@@ -104,7 +108,6 @@ export default function Calendar({ bookedSlots = [], groundName }: CalendarProps
             </button>
           </div>
 
-          {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-2 text-center mb-6">
             {daysOfWeek.map((day) => (
               <div key={day} className="font-semibold text-gray-600">
@@ -122,8 +125,8 @@ export default function Calendar({ bookedSlots = [], groundName }: CalendarProps
                     `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
                       .toString()
                       .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
-                      ? "bg-blue-500 text-white shadow-md scale-105"
-                      : "hover:bg-blue-100 text-gray-800"
+                      ? "bg-green-500 text-white shadow-md scale-105"
+                      : "hover:bg-green-100 text-gray-800"
                   }`}
                 >
                   {day}
@@ -136,7 +139,6 @@ export default function Calendar({ bookedSlots = [], groundName }: CalendarProps
         </>
       )}
 
-      {/* Time Picker */}
       {showTimePicker && selectedDate && (
         <div className="bg-gray-50 rounded-lg p-4 shadow-md mb-6">
           <h4 className="text-lg font-semibold text-gray-800 mb-3">
@@ -144,16 +146,24 @@ export default function Calendar({ bookedSlots = [], groundName }: CalendarProps
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {slots.map((slot) => {
-              const isBooked = bookedForDate.includes(`${selectedDate} ${slot}`);
+              const fullSlot = `${selectedDate} ${slot}`;
+              const isBooked = bookedForDate.includes(fullSlot);
               const isSelected = selectedTimes.includes(slot);
+
               return (
                 <button
                   key={slot}
-                  onClick={() => !isBooked && toggleSlot(slot)}
-                  disabled={isBooked}
+                  onClick={() =>
+                    isBooked && isAdmin
+                      ? onSlotClick?.(fullSlot)
+                      : !isBooked && toggleSlot(slot)
+                  }
+                  disabled={!isAdmin && isBooked}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition transform ${
                     isBooked
-                      ? "bg-red-600 text-white cursor-not-allowed opacity-90"
+                      ? isAdmin
+                        ? "bg-red-500 text-white shadow-md" // Admin can click
+                        : "bg-red-600 text-white cursor-not-allowed opacity-90"
                       : isSelected
                       ? "bg-green-600 text-white shadow-md scale-105"
                       : "bg-white hover:bg-gray-200 text-gray-800"
@@ -168,7 +178,7 @@ export default function Calendar({ bookedSlots = [], groundName }: CalendarProps
           <div className="flex justify-end mt-6">
             <button
               onClick={handleConfirm}
-              className="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
+              className="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
             >
               Confirm Booking
             </button>

@@ -34,11 +34,10 @@ export default function BookingForm({ bookingSummary, onNext }: BookingFormProps
 
   return (
     <div className="max-w-lg mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Confirm Your Booking</h2>
 
       {/* Booking Summary */}
       <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
-        <h3 className="font-semibold text-gray-700 mb-2">Booking Summary</h3>
+        <h3 className="font-semibold text-green-700 mb-2">Booking Summary</h3>
         <p>
           <span className="font-medium">Ground:</span> {bookingSummary.groundName}
         </p>
@@ -65,7 +64,7 @@ export default function BookingForm({ bookingSummary, onNext }: BookingFormProps
         </div>
 
         <div>
-          <label className="block text-gray-700 font-medium mb-1">Phone Number</label>
+          <label className="block text-green-700 font-medium mb-1">Phone Number</label>
           <input
             type="tel"
             name="phone"
@@ -77,7 +76,7 @@ export default function BookingForm({ bookingSummary, onNext }: BookingFormProps
         </div>
 
         <div>
-          <label className="block text-gray-700 font-medium mb-1">NIC / Passport Number</label>
+          <label className="block text-green-700 font-medium mb-1">NIC / Passport Number</label>
           <input
             type="text"
             name="nic"
@@ -92,7 +91,7 @@ export default function BookingForm({ bookingSummary, onNext }: BookingFormProps
       <div className="mt-6 flex justify-end">
         <button
           onClick={handleSubmit}
-          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="bg-green-700 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition"
         >
           Next
         </button>
