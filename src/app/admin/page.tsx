@@ -137,9 +137,7 @@ export default function AdminPage() {
             </button>
 
             <div className="p-6">
-              <h2 className="text-2xl font-bold text-green-800 mb-4 text-center">
-                Add New Ground
-              </h2>
+              
               <AddGroundForm />
             </div>
           </div>
