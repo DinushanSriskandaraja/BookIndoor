@@ -105,7 +105,6 @@ export default function AdminTab() {
                 <th className="p-3 border-b">Profile</th>
                 <th className="p-3 border-b">Name</th>
                 <th className="p-3 border-b">Email</th>
-                <th className="p-3 border-b">Managing Ground</th>
               </tr>
             </thead>
             <tbody>
@@ -123,7 +122,6 @@ export default function AdminTab() {
                   </td>
                   <td className="p-3 border-b font-medium">{admin.name}</td>
                   <td className="p-3 border-b">{admin.email}</td>
-                  <td className="p-3 border-b">{admin.managingGround}</td>
                 </tr>
               ))}
             </tbody>

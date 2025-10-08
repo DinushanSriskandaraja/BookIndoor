@@ -12,8 +12,6 @@ interface AdminFormData {
   bank_name: string;
   account_no: string;
   branch: string;
-  managingGround: string;
-  image?: File | null;
 }
 
 interface AddAdminFormProps {
@@ -31,23 +29,11 @@ export default function AddAdminForm({ onAddAdmin }: AddAdminFormProps) {
     bank_name: "",
     account_no: "",
     branch: "",
-    managingGround: "",
-    image: null,
   });
-
-  const [preview, setPreview] = useState<string | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormData((prev) => ({ ...prev, image: file }));
-      setPreview(URL.createObjectURL(file));
-    }
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -65,10 +51,7 @@ export default function AddAdminForm({ onAddAdmin }: AddAdminFormProps) {
       bank_name: "",
       account_no: "",
       branch: "",
-      managingGround: "",
-      image: null,
     });
-    setPreview(null);
   };
 
   return (
@@ -92,7 +75,6 @@ export default function AddAdminForm({ onAddAdmin }: AddAdminFormProps) {
           { name: "bank_name", placeholder: "Bank Name" },
           { name: "account_no", placeholder: "Account Number" },
           { name: "branch", placeholder: "Branch Name" },
-          { name: "managingGround", placeholder: "Managing Ground" },
         ].map((field) => (
           <input
             key={field.name}
@@ -105,30 +87,6 @@ export default function AddAdminForm({ onAddAdmin }: AddAdminFormProps) {
             className="w-full p-3 border border-green-400 rounded-lg bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-600"
           />
         ))}
-
-        {/** IMAGE UPLOAD */}
-        <div className="md:col-span-2 flex flex-col items-center justify-center border-2 border-dashed border-green-400 rounded-lg p-4 hover:border-green-600 transition">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-            id="imageUpload"
-          />
-          <label
-            htmlFor="imageUpload"
-            className="cursor-pointer text-green-700 font-medium hover:underline"
-          >
-            Upload Profile Image
-          </label>
-          {preview && (
-            <img
-              src={preview}
-              alt="Preview"
-              className="w-24 h-24 mt-3 rounded-full object-cover shadow-md border border-green-400"
-            />
-          )}
-        </div>
 
         {/** SUBMIT BUTTON */}
         <div className="md:col-span-2">
