@@ -63,6 +63,8 @@ export default function AdminGroundDetails() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  const userRole = "admin"; // replace with real user role from context or session
+
   const ground = mockGround;
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedSport, setSelectedSport] = useState<string | null>(null);
@@ -164,7 +166,10 @@ export default function AdminGroundDetails() {
           {ground.sports.map((sport) => (
             <button
               key={sport.name}
-              onClick={() => setSelectedSport(sport.name)}
+              onClick={() => {
+                setSelectedSport(sport.name);
+                setActiveTab("calendar"); // start on calendar
+              }}
               className={`px-5 py-3 rounded-xl border font-semibold flex-shrink-0 transition ${
                 selectedSport === sport.name
                   ? "bg-green-600 text-white border-green-600 scale-105"
