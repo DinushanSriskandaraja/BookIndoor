@@ -190,35 +190,33 @@ export default function AddGroundForm() {
     const selectedOwnerId = localStorage.getItem("id");
     if (!token) return alert("You are not logged in!");
 
-    const payload = {
-      token, // or remove if using Authorization header
-      ownerId: selectedOwnerId, // only if admin creating ground
-      name: formData.ground_name,
-      location: {
-        address: formData.location,
-        lat: Number(formData.latitude),
-        lng: Number(formData.longitude),
-      },
-      contactNumber: formData.phone_no,
-      groundType: formData.court_type,
-      sports: formData.sports.map((s) => ({
-        name: s.sport,
-        pricePerHour: s.price,
-      })),
-      availableTime: { from: formData.open_from, to: formData.open_to },
-      amenities: formData.facilities,
-      images: previewImages,
-      description: "",
-    };
+    const formDataToSend = new FormData();
+    formDataToSend.append("token", token);
+    formDataToSend.append("ownerId", selectedOwnerId || "");
+    formDataToSend.append("name", formData.ground_name);
+    formDataToSend.append("location[address]", formData.location);
+    formDataToSend.append("location[lat]", formData.latitude);
+    formDataToSend.append("location[lng]", formData.longitude);
+    formDataToSend.append("contactNumber", formData.phone_no);
+    formDataToSend.append("groundType", formData.court_type);
+    formDataToSend.append("availableTime[from]", formData.open_from);
+    formDataToSend.append("availableTime[to]", formData.open_to);
+    formDataToSend.append("amenities", JSON.stringify(formData.facilities));
+    formDataToSend.append(
+      "sports",
+      JSON.stringify(
+        formData.sports.map((s) => ({
+          name: s.sport,
+          pricePerHour: s.price,
+        }))
+      )
+    );
+    formData.images.forEach((file) => formDataToSend.append("images", file));
 
     try {
       const res = await fetch("/api/grounds/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+        body: formDataToSend, // ✅ no Content-Type
       });
 
       const data = await res.json();

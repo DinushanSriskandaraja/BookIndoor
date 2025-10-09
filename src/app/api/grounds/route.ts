@@ -3,6 +3,8 @@ import dbConnect from "@/lib/mongodb";
 import Ground from "@/models/Grounds";
 import User from "@/models/User";
 import { verifyToken } from "@/lib/auth";
+import cloudinary from "@/lib/cloudinary";
+import { Readable } from "stream";
 
 interface SportInput {
   name: string;
@@ -27,40 +29,67 @@ interface GroundBody {
 export async function POST(req: Request) {
   try {
     await dbConnect();
-    const body: GroundBody = await req.json();
 
-    const decoded = verifyToken(body.token);
+    const formData = await req.formData(); // ✅ works for multipart/form-data
+
+    const token = formData.get("token") as string;
+    const ownerId = formData.get("ownerId") as string;
+    const name = formData.get("name") as string;
+    const contactNumber = formData.get("contactNumber") as string;
+    const groundType = formData.get("groundType") as string;
+
+    const location = {
+      address: formData.get("location[address]") as string,
+      lat: Number(formData.get("location[lat]")),
+      lng: Number(formData.get("location[lng]")),
+    };
+
+    const availableTime = {
+      from: formData.get("availableTime[from]") as string,
+      to: formData.get("availableTime[to]") as string,
+    };
+
+    const sports = JSON.parse(formData.get("sports") as string);
+    const amenities = JSON.parse(formData.get("amenities") as string);
+
+    // ✅ Token check
+    const decoded = verifyToken(token);
     if (!decoded || !["admin", "super_admin"].includes(decoded.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const owner = await User.findById(body.ownerId);
-    if (!owner || owner.role !== "admin") {
-      return NextResponse.json(
-        { error: "Invalid ground owner" },
-        { status: 400 }
-      );
+    // ✅ Upload images to Cloudinary
+    const images: string[] = [];
+    const files = formData.getAll("images") as File[];
+
+    for (const file of files) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString("base64");
+      const dataURI = `data:${file.type};base64,${base64}`;
+
+      const uploadRes = await cloudinary.uploader.upload(dataURI, {
+        folder: "grounds",
+      });
+
+      images.push(uploadRes.secure_url);
     }
 
     const ground = await Ground.create({
-      name: body.name,
-      location: body.location,
-      contactNumber: body.contactNumber,
-      groundType: body.groundType,
-      owner: body.ownerId,
-      sports: body.sports,
-      availableTime: body.availableTime,
-      amenities: body.amenities || [],
-      images: body.images || [],
-      description: body.description,
+      name,
+      location,
+      contactNumber,
+      groundType,
+      owner: ownerId,
+      sports,
+      availableTime,
+      amenities,
+      images,
     });
 
     return NextResponse.json({ success: true, ground });
   } catch (err: any) {
     console.error("Ground Creation Error:", err);
-    if (err.name === "ValidationError") {
-      return NextResponse.json({ error: err.errors }, { status: 400 });
-    }
     return NextResponse.json(
       { error: "Failed to create ground" },
       { status: 500 }

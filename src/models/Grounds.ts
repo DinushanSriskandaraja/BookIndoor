@@ -44,7 +44,7 @@ const GroundSchema = new Schema<IGround>(
       to: { type: String, required: true },
     },
     amenities: { type: [String], default: [] },
-    images: { type: [String], default: [] },
+    images: [{ type: String }],
     description: { type: String },
   },
   { timestamps: true }
