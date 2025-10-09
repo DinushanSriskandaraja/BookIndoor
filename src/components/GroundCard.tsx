@@ -22,7 +22,7 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
       : `/user/ground/${ground.id}`;
 
   return (
-    <div className="bg-green-100/10 backdrop-blur-md border border-green-100/10 rounded-2xl shadow-lg overflow-hidden w-full max-w-[400px] transition-all transform hover:scale-105 hover:shadow-2xl">
+    <div className="bg-green-100/10 backdrop-blur-md border border-green-100/10 rounded-2xl  overflow-hidden w-full max-w-[400px] transition-all transform hover:scale-105 hover:shadow-2xl">
       {/* Image Section */}
       <div className="relative w-82 h-56">
         <img
@@ -76,7 +76,7 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
         {/* Button */}
         <Link
           href={link}
-          className="block w-full text-center px-5 py-2 bg-green-800 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md">
+          className="block w-full text-center px-5 py-2 bg-green-800 text-white font-semibold rounded-lg hover:bg-green-700 transition-all">
           View Details
         </Link>
       </div>

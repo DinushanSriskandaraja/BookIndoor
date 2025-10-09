@@ -126,7 +126,7 @@ export default function Calendar({
                       `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
                         .toString()
                         .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
-                        ? "bg-green-500 text-white shadow-md scale-105"
+                        ? "bg-green-500 text-white  scale-105"
                         : "hover:bg-green-100 text-gray-800"
                     }`}
                   >
@@ -143,7 +143,7 @@ export default function Calendar({
 
       {/* Time Picker */}
       {showTimePicker && selectedDate && (
-        <div className="bg-gray-50 rounded-lg p-4 shadow-md mb-6">
+        <div className="bg-gray-50 rounded-lg p-4 mb-6">
           <h4 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
             Select Time for {selectedDate}
           </h4>
@@ -165,10 +165,10 @@ export default function Calendar({
                   className={`px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition transform ${
                     isBooked
                       ? isAdmin
-                        ? "bg-red-500 text-white shadow-md"
+                        ? "bg-red-500 text-white "
                         : "bg-red-600 text-white cursor-not-allowed opacity-90"
                       : isSelected
-                      ? "bg-green-600 text-white shadow-md scale-105"
+                      ? "bg-green-600 text-white  scale-105"
                       : "bg-white hover:bg-gray-200 text-gray-800"
                   }`}
                   title={isBooked ? "Already booked" : ""}

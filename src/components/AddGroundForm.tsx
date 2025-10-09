@@ -248,7 +248,7 @@ export default function AddGroundForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-6 bg-white p-6 rounded-xl shadow-md">
+    <div className="max-w-2xl mx-auto mt-6 bg-white p-6 rounded-xl ">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-green-900">
           {mode === "edit" ? "Edit Ground" : "Add New Ground"}

@@ -42,7 +42,7 @@ export default function PaymentForm({
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-8 bg-green-100/20 backdrop-blur-md border border-green-700/30 rounded-2xl shadow-lg">
+    <div className="max-w-lg mx-auto mt-10 p-8 bg-green-100/20 backdrop-blur-md border border-green-700/30 rounded-2xl ">
       <h2 className="text-3xl font-bold mb-6 text-green-900 text-center">
         Payment Details
       </h2>
@@ -127,7 +127,7 @@ export default function PaymentForm({
 
         <button
           type="submit"
-          className="w-full mt-4 px-4 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition shadow-md"
+          className="w-full mt-4 px-4 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition "
         >
           Pay Now
         </button>

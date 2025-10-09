@@ -98,7 +98,7 @@ export default function SuperAdminSummaryTab() {
       {summaryCards.map((card, idx) => (
         <div
           key={idx}
-          className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition cursor-default">
+          className="bg-white p-6 rounded-xl  hover:shadow-lg transition cursor-default">
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
             {card.title}
           </h3>

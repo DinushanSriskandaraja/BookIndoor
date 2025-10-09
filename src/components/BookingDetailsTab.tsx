@@ -70,7 +70,7 @@ export default function BookingDetailsTab({
             <div
               key={booking.id}
               onClick={() => setSelectedBooking(booking)}
-              className="cursor-pointer bg-white/60 backdrop-blur-md border border-gray-200 rounded-2xl shadow-md p-5 hover:shadow-lg transition-all duration-200"
+              className="cursor-pointer bg-white/60 backdrop-blur-md border border-gray-200 rounded-2xl p-5 hover:shadow-lg transition-all duration-200"
             >
               <div className="flex justify-between items-center mb-2">
                 <p className="text-sm text-gray-600 font-medium">

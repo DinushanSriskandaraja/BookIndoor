@@ -38,7 +38,7 @@ export default function BookingSummaryTab({ selectedSport }: BookingSummaryTabPr
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
       {Object.entries(summaryData).map(([period, data]) => (
-        <div key={period} className="bg-white p-6 rounded-lg shadow-md">
+        <div key={period} className="bg-white p-6 rounded-lg ">
           {/* Period Title */}
           <h3 className="text-lg font-semibold text-gray-800 capitalize text-center">
             {period}

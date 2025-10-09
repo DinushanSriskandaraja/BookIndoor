@@ -92,7 +92,7 @@ export default function AdminTab() {
       </div>
 
       {/* Admin List */}
-      <div className="bg-white p-4 rounded-lg shadow-md overflow-x-auto">
+      <div className="bg-white p-4 rounded-lg  overflow-x-auto">
         <h3 className="text-lg font-semibold mb-4">All Admins</h3>
         {loading ? (
           <p className="text-gray-500 text-center py-8">Loading admins...</p>

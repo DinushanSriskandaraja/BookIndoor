@@ -33,7 +33,7 @@ export default function BookingForm({ bookingSummary, onNext }: BookingFormProps
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
+    <div className="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg">
 
       {/* Booking Summary */}
       <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">

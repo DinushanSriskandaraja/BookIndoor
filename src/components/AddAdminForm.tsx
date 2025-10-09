@@ -55,7 +55,7 @@ export default function AddAdminForm({ onAddAdmin }: AddAdminFormProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto mt-8 p-8 bg-green-100/20 backdrop-blur-md border border-green-700/30 rounded-2xl shadow-lg">
+    <div className="max-w-3xl mx-auto mt-8 p-8 bg-green-100/20 backdrop-blur-md border border-green-700/30 rounded-2xl ">
       <h2 className="text-2xl font-bold text-green-900 text-center mb-6">
         Add New Admin
       </h2>
@@ -92,7 +92,7 @@ export default function AddAdminForm({ onAddAdmin }: AddAdminFormProps) {
         <div className="md:col-span-2">
           <button
             type="submit"
-            className="w-full py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition shadow-md"
+            className="w-full py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition "
           >
             Add Admin
           </button>

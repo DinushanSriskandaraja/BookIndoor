@@ -25,7 +25,7 @@ export default function AdminProfile({ adminId }: AdminProfileProps) {
   if (!admin) return <p className="text-gray-500">Admin not found.</p>;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white p-6 rounded-lg ">
       <h1 className="text-2xl font-bold mb-4">{admin.name}</h1>
       <div className="space-y-2">
         <p><strong>Email:</strong> {admin.email}</p>
