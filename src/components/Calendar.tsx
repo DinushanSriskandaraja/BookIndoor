@@ -1,12 +1,12 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface CalendarProps {
   groundId: string;
   groundName?: string;
   isAdmin?: boolean;
-  onSlotClick?: (slot: string) => void;
+  onSlotClick?: (date: string, times: string[]) => void; // updated type
 }
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -17,23 +17,19 @@ export default function Calendar({
   isAdmin = false,
   onSlotClick,
 }: CalendarProps) {
-  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  // ⏳ fetch booked slots when date changes
+  // fetch booked slots
   useEffect(() => {
     const fetchBooked = async () => {
       if (!selectedDate) return;
       try {
-        const res = await fetch(
-          `/api/booking?ground=${groundId}&date=${selectedDate}`
-        );
+        const res = await fetch(`/api/booking?ground=${groundId}&date=${selectedDate}`);
         const data = await res.json();
-
         if (Array.isArray(data)) {
           const slots = data.flatMap((b) => b.timeSlots);
           setBookedSlots(slots);
@@ -58,13 +54,9 @@ export default function Calendar({
   const slots = generateSlots();
 
   const prevMonth = () =>
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    );
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () =>
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    );
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
   const generateCalendar = () => {
     const year = currentDate.getFullYear();
@@ -75,7 +67,6 @@ export default function Calendar({
     for (let d = 1; d <= daysInMonth; d++) days.push(d);
     return days;
   };
-
   const calendarDays = generateCalendar();
 
   const toggleSlot = (slot: string) => {
@@ -95,18 +86,12 @@ export default function Calendar({
 
   const handleConfirm = () => {
     if (!selectedTimes.length) {
-      alert("Please select at least one time slot before confirming.");
+      alert("Please select at least one time slot.");
       return;
     }
-
-    const query = new URLSearchParams({
-      date: selectedDate!,
-      times: selectedTimes.join(","),
-      ground: groundId,
-      groundName: groundName || "Ground",
-    }).toString();
-
-    router.push(`/user/booking/payment?${query}`);
+    if (selectedDate && onSlotClick) {
+      onSlotClick(selectedDate, selectedTimes); // pass data to parent
+    }
   };
 
   return (
@@ -116,11 +101,11 @@ export default function Calendar({
           <div className="flex justify-between mb-4">
             <button onClick={prevMonth}>Prev</button>
             <span>
-              {currentDate.toLocaleString("default", { month: "long" })}{" "}
-              {currentDate.getFullYear()}
+              {currentDate.toLocaleString("default", { month: "long" })} {currentDate.getFullYear()}
             </span>
             <button onClick={nextMonth}>Next</button>
           </div>
+
           <div className="grid grid-cols-7 gap-2 text-center">
             {daysOfWeek.map((day) => (
               <div key={day}>{day}</div>
@@ -137,7 +122,8 @@ export default function Calendar({
                       .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
                       ? "bg-green-500 text-white"
                       : "hover:bg-green-100"
-                  }`}>
+                  }`}
+                >
                   {day}
                 </button>
               ) : (
@@ -150,32 +136,24 @@ export default function Calendar({
 
       {showTimePicker && selectedDate && (
         <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="text-lg font-semibold mb-3">
-            Select Time for {selectedDate}
-          </h4>
+          <h4 className="text-lg font-semibold mb-3">Select Time for {selectedDate}</h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {slots.map((slot) => {
-              const fullSlot = `${selectedDate} ${slot}`;
               const isBooked = bookedSlots.includes(slot);
               const isSelected = selectedTimes.includes(slot);
               return (
                 <button
                   key={slot}
-                  onClick={() =>
-                    isBooked && isAdmin
-                      ? onSlotClick?.(fullSlot)
-                      : !isBooked && toggleSlot(slot)
-                  }
-                  disabled={!isAdmin && isBooked}
+                  onClick={() => (!isBooked ? toggleSlot(slot) : null)}
+                  disabled={isBooked}
                   className={`px-3 py-2 rounded-lg ${
                     isBooked
-                      ? isAdmin
-                        ? "bg-red-500 text-white"
-                        : "bg-red-600 text-white opacity-70"
+                      ? "bg-red-600 text-white opacity-70"
                       : isSelected
                       ? "bg-green-600 text-white"
                       : "bg-white"
-                  }`}>
+                  }`}
+                >
                   {slot}
                 </button>
               );
@@ -184,7 +162,8 @@ export default function Calendar({
           <div className="flex justify-end mt-4">
             <button
               onClick={handleConfirm}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg">
+              className="px-4 py-2 bg-green-600 text-white rounded-lg"
+            >
               Confirm Booking
             </button>
           </div>

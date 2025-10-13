@@ -19,12 +19,15 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-green-700 shadow-md sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+    <header className="bg-green-700 shadow-md sticky top-0 z-10 w-full">
+      {/* ✅ Removed container and made padding directly in header */}
+      <div className="flex items-center justify-between px-6 sm:px-10 py-4">
+        {/* Logo / Brand */}
         <span className="text-2xl font-bold text-white tracking-wide">
           BookIndoor
         </span>
 
+        {/* User or Logout button */}
         <div className="flex items-center gap-4">
           {(role === "admin" || role === "superadmin") ? (
             <button
