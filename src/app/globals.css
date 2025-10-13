@@ -60,23 +60,24 @@ button {
 }
 
 button.primary {
-  background-color: var(--primary);
-  color: #fff;
+  background-color: #16a34a; /* Tailwind green-600 */
+  color: #ffffff;
+  border: none;
 }
 
 button.primary:hover {
-  background-color: var(--secondary);
+  background-color: #15803d;
 }
 
 button.secondary {
-  background-color: transparent;
-  color: var(--primary);
-  border: 2px solid var(--primary);
+   background-color: transparent;
+  color: #16a34a; /* green-600 */
+  border: 2px solid #16a34a;
 }
 
 button.secondary:hover {
-  background-color: var(--primary);
-  color: #fff;
+  background-color: #16a34a; /* green-600 */
+  color: #ffffff;
 }
 
 /* =======================
@@ -164,7 +165,7 @@ label {
     padding: 0.75rem;
     border-radius: 0.5rem;
     border: 1px solid #4ade80; /* green-400 */
-    background-color: rgba(255,255,255,0.5);
+    background-color: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(4px);
     outline: none;
     transition: all 0.2s;
