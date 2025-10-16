@@ -7,8 +7,8 @@ interface BookingSummary {
   location: string;
   date: string;
   times: string[];
-  groundId: string; // make sure you pass the actual ground _id
-  sportName: string; // the sport name being booked
+  groundId: string;
+  sportName: string;
 }
 
 interface PaymentFormProps {
@@ -65,7 +65,7 @@ export default function PaymentForm({
             nicNumber: userDetails.nic,
           },
           date: bookingDetails.date,
-          timeSlots: bookingDetails.times.map((t) => ({ startTime: t })), // match backend format
+          timeSlots: bookingDetails.times.map((t) => ({ startTime: t })),
           paymentStatus: isAdvance ? "advanced_paid" : "full_paid",
         }),
       });
@@ -96,10 +96,14 @@ export default function PaymentForm({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div
+      className="w-full max-w-3xl mx-auto h-[90vh] overflow-y-auto rounded-2xl scrollbar-thin scrollbar-thumb-green-500 scrollbar-track-green-100"
+      style={{ scrollBehavior: "smooth" }}
+    >
       <form
         onSubmit={handleBooking}
-        className="p-8 border border-green-700/30 rounded-2xl space-y-6 bg-green-50/30 shadow-lg">
+        className="p-8 border border-green-700/30 rounded-2xl space-y-6 bg-green-50/30 shadow-lg"
+      >
         {/* Booking Summary */}
         <div className="bg-green-50 p-5 rounded-xl border border-green-200 shadow-inner">
           <h3 className="font-semibold text-green-800 mb-3 text-lg">
@@ -143,7 +147,8 @@ export default function PaymentForm({
               isAdvance
                 ? "bg-green-700 text-white"
                 : "bg-green-100 text-green-700 border border-green-300"
-            }`}>
+            }`}
+          >
             {isAdvance ? "Cancel Advance Payment" : "Pay 50% Advance"}
           </button>
         </div>
@@ -196,7 +201,8 @@ export default function PaymentForm({
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-4 px-4 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition disabled:opacity-50">
+          className="w-full mt-4 px-4 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition disabled:opacity-50"
+        >
           {loading
             ? "Processing..."
             : isAdvance
