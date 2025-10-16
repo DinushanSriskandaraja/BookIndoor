@@ -1,5 +1,6 @@
 // "use client";
 // import { useState } from "react";
+// import PayHereButton from "./PayHereButton";
 
 // export interface BookingSummary {
 //   date: string;
@@ -12,7 +13,10 @@
 //   onNext: (formData: { name: string; phone: string; nic: string }) => void;
 // }
 
-// export default function BookingForm({ bookingSummary, onNext }: BookingFormProps) {
+// export default function BookingForm({
+//   bookingSummary,
+//   onNext,
+// }: BookingFormProps) {
 //   const [formData, setFormData] = useState({
 //     name: "",
 //     phone: "",
@@ -23,36 +27,47 @@
 //     const { name, value } = e.target;
 //     setFormData({ ...formData, [name]: value });
 //   };
-
-//   const handleSubmit = () => {
-//     if (!formData.name || !formData.phone || !formData.nic) {
-//       alert("Please fill in all fields before proceeding.");
-//       return;
-//     }
-//     onNext(formData);
+//   const customer = {
+//     firstName: "Dinushan",
+//     lastName: "S",
+//     email: "dinushan@example.com",
+//     phone: "0771234567",
+//     address: "Colombo",
+//     city: "Colombo",
 //   };
+
+//   //   const handleSubmit = () => {
+//   //     if (!formData.name || !formData.phone || !formData.nic) {
+//   //       alert("Please fill in all fields before proceeding.");
+//   //       return;
+//   //     }
+//   //     onNext(formData);
+//   //   };
 
 //   return (
 //     <div className="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg">
-
 //       {/* Booking Summary */}
 //       <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
 //         <h3 className="font-semibold text-green-700 mb-2">Booking Summary</h3>
 //         <p>
-//           <span className="font-medium">Ground:</span> {bookingSummary.groundName}
+//           <span className="font-medium">Ground:</span>{" "}
+//           {bookingSummary.groundName}
 //         </p>
 //         <p>
 //           <span className="font-medium">Date:</span> {bookingSummary.date}
 //         </p>
 //         <p>
-//           <span className="font-medium">Time:</span> {bookingSummary.times.join(", ")}
+//           <span className="font-medium">Time:</span>{" "}
+//           {bookingSummary.times.join(", ")}
 //         </p>
 //       </div>
 
 //       {/* Booking Form */}
 //       <div className="space-y-4">
 //         <div>
-//           <label className="block text-gray-700 font-medium mb-1">Full Name</label>
+//           <label className="block text-gray-700 font-medium mb-1">
+//             Full Name
+//           </label>
 //           <input
 //             type="text"
 //             name="name"
@@ -64,7 +79,9 @@
 //         </div>
 
 //         <div>
-//           <label className="block text-green-700 font-medium mb-1">Phone Number</label>
+//           <label className="block text-green-700 font-medium mb-1">
+//             Phone Number
+//           </label>
 //           <input
 //             type="tel"
 //             name="phone"
@@ -76,7 +93,9 @@
 //         </div>
 
 //         <div>
-//           <label className="block text-green-700 font-medium mb-1">NIC / Passport Number</label>
+//           <label className="block text-green-700 font-medium mb-1">
+//             NIC / Passport Number
+//           </label>
 //           <input
 //             type="text"
 //             name="nic"
@@ -89,12 +108,7 @@
 //       </div>
 
 //       <div className="mt-6 flex justify-end">
-//         <button
-//           onClick={handleSubmit}
-//           className="bg-green-700 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition"
-//         >
-//           Next
-//         </button>
+//         <PayHereButton orderId="ORDER12345" amount={1000} />
 //       </div>
 //     </div>
 //   );
