@@ -44,7 +44,7 @@ export default function HeroSection() {
           </motion.div>
         ))}
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-green-800/60 via-green-700/50 to-green-900/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white-800/60 via-white-700/50 to-green-900/70" />
       </div>
 
       {/* Hero content */}

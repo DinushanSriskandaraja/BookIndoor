@@ -3,36 +3,6 @@ import { useEffect, useState, useMemo } from "react";
 import GroundCard, { Ground } from "@/components/GroundCard";
 import GroundFilter from "@/components/GroundFilter";
 
-function GroundBanner({ images }: { images: string[] }) {
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(
-      () => setCurrent((prev) => (prev + 1) % images.length),
-      3000
-    );
-    return () => clearInterval(interval);
-  }, [images.length]);
-
-  return (
-    <div className="relative w-full h-[50vh] sm:h-[60vh] overflow-hidden shadow-xl">
-      {images.map((img, index) => (
-        <img
-          key={index}
-          src={img}
-          alt={`Ground ${index}`}
-          className={`absolute top-0 left-0 w-full h-full object-cover transition-transform duration-1000 ease-in-out ${
-            index === current
-              ? "translate-x-0 opacity-100"
-              : "translate-x-full opacity-0"
-          }`}
-        />
-      ))}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-transparent" />
-    </div>
-  );
-}
-
 export default function UserPage() {
   const [grounds, setGrounds] = useState<Ground[]>([]);
   const [filters, setFilters] = useState({
@@ -88,28 +58,27 @@ export default function UserPage() {
     });
   }, [grounds, filters]);
 
-  const bannerImages = grounds.map((g) => g.image);
-
   return (
     <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col overflow-x-hidden">
-      {bannerImages.length > 0 && <GroundBanner images={bannerImages} />}
-
+      {/* Page Header */}
       <section className="w-full max-w-[1600px] mx-auto flex-1 px-4 sm:px-8 py-16">
-        <h1 className="text-4xl sm:text-5xl text-center font-extrabold">
-          Explore Our Grounds
-        </h1>
-        <p className="text-lg sm:text-xl mb-8 text-center text-green-600 mt-2">
-          Book your perfect spot today!
-        </p>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-green-800">
+            Explore Our Grounds
+          </h1>
+          <p className="text-lg sm:text-xl text-green-600 mt-2">
+            Find and book your perfect indoor ground today!
+          </p>
+        </div>
 
-        {/* ✅ Add GroundFilter component */}
+        {/* ✅ Filter Section */}
         <GroundFilter
           onFilterChange={(f) => setFilters(f)}
           availableSports={availableSports}
         />
 
         {/* ✅ Grounds Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center mt-10">
           {filteredGrounds.length > 0 ? (
             filteredGrounds.map((g) => (
               <GroundCard key={g.id} ground={g} role={"User"} id={0} />

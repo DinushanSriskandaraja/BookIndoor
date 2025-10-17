@@ -1,19 +1,45 @@
 "use client";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-const groundImages = [
-  "/images/indoor1.jpg",
-  "/images/indoor2.jpg",
-  "/images/indoor3.jpg",
-  "/images/indoor4.jpg",
-  "/images/indoor5.jpg",
-  "/images/indoor6.jpg",
-];
+interface Ground {
+  id: string;
+  name: string;
+  images: string[];
+}
 
 export default function GroundsCarousel() {
+  const [groundImages, setGroundImages] = useState<string[]>([]);
+
+  // Fetch all grounds from backend
+  useEffect(() => {
+    const fetchGrounds = async () => {
+      try {
+        const res = await fetch("/api/grounds"); // your API endpoint
+        if (!res.ok) throw new Error("Failed to fetch grounds");
+        const data: Ground[] = await res.json();
+        // Collect all images from all grounds
+        const images = data.flatMap((ground) => ground.images);
+        setGroundImages(images);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchGrounds();
+  }, []);
+
+  if (groundImages.length === 0)
+    return (
+      <section className="py-20 bg-white text-center text-green-100">
+        <h2 className="text-3xl font-bold mb-10">Popular Indoor Grounds</h2>
+        <p>Loading grounds...</p>
+      </section>
+    );
+
   return (
-    <section className="py-20 bg-green-900/30 overflow-hidden">
+    <section className="py-20 bg-white overflow-hidden">
       <h2 className="text-center text-3xl font-bold text-green-100 mb-10">
         Popular Indoor Grounds
       </h2>

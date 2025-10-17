@@ -21,7 +21,7 @@ export default function GroundCard({ ground, role = "User" }: GroundCardProps) {
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-[400px]">
       {/* Image */}
-      <div className="relative w-90 h-56">
+      <div className="relative w-full h-56">
         <img
           src={ground.image}
           alt={ground.name}

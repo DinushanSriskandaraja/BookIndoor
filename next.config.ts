@@ -4,14 +4,18 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "res.cloudinary.com",
+        port: "",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "plus.unsplash.com", // optional (some Unsplash CDN images use this)
+        hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
