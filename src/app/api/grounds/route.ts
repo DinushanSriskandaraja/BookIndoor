@@ -1,28 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Ground from "@/models/Grounds";
-import User from "@/models/User";
 import { verifyToken } from "@/lib/auth";
 import cloudinary from "@/lib/cloudinary";
-import { Readable } from "stream";
 
 interface SportInput {
   name: string;
   pricePerHour: number;
-}
-
-interface GroundBody {
-  token: string;
-  ownerId?: string;
-  name: string;
-  location: { address: string; lat?: number; lng?: number };
-  contactNumber: string;
-  groundType: string;
-  sports: SportInput[];
-  availableTime: { from: string; to: string };
-  amenities?: string[];
-  images?: string[];
-  description?: string;
 }
 
 // ✅ CREATE Ground
@@ -30,7 +14,7 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
 
-    const formData = await req.formData(); // ✅ works for multipart/form-data
+    const formData = await req.formData();
 
     const token = formData.get("token") as string;
     const ownerId = formData.get("ownerId") as string;
@@ -49,8 +33,8 @@ export async function POST(req: Request) {
       to: formData.get("availableTime[to]") as string,
     };
 
-    const sports = JSON.parse(formData.get("sports") as string);
-    const amenities = JSON.parse(formData.get("amenities") as string);
+    const sports = JSON.parse(formData.get("sports") as string) as SportInput[];
+    const amenities = JSON.parse(formData.get("amenities") as string) as string[];
 
     // ✅ Token check
     const decoded = verifyToken(token);
@@ -88,7 +72,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, ground });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Ground Creation Error:", err);
     return NextResponse.json(
       { error: "Failed to create ground" },
@@ -122,7 +106,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(grounds);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Ground Fetch Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch grounds" },
