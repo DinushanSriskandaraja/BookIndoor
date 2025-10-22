@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Booking from "@/models/Booking";
 import Ground from "@/models/Grounds";
-import { verifyToken } from "@/lib/auth";
 
 interface BookingInput {
   token?: string; // optional for guest
@@ -97,7 +96,7 @@ export async function POST(req: Request) {
       bookingId: booking._id,
       amount: totalAmount,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Booking Creation Error:", err);
     return NextResponse.json(
       { error: "Failed to create booking" },
@@ -113,7 +112,6 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const groundId = url.searchParams.get("ground");
     const date = url.searchParams.get("date");
-    const token = url.searchParams.get("token");
 
     if (!groundId || !date) {
       return NextResponse.json(
@@ -121,8 +119,6 @@ export async function GET(req: Request) {
         { status: 400 }
       );
     }
-
-    const decoded = token ? verifyToken(token) : null;
 
     // 🏟️ Get Ground Data
     const ground = await Ground.findById(groundId);
@@ -143,9 +139,6 @@ export async function GET(req: Request) {
       )
     );
 
-    // console.log("Booked Slots in DB:", [...bookedSet]);
-    // console.log("Generated Slots:", timeSlots);
-
     // 🟢 Build Response with slot status
     const response = timeSlots.map((slot) => ({
       timeSlot: slot,
@@ -153,7 +146,7 @@ export async function GET(req: Request) {
     }));
 
     return NextResponse.json(response);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Fetch Bookings Error:", err);
     return NextResponse.json(
       { error: "Failed to fetch available slots" },
