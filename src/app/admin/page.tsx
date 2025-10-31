@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GroundCard, { Ground } from "@/components/GroundCard";
+import { useRouter } from "next/navigation";
+import GroundCard, { Ground as BaseGround } from "@/components/GroundCard";
 import AddGroundForm from "@/components/AddGroundForm";
 
 interface Stats {
@@ -13,13 +14,17 @@ interface Stats {
 
 type TabType = "grounds" | "summary" | "details";
 
-// Backend response type for grounds
 interface BackendGround {
   _id: string;
   name: string;
   location: { address?: string } | string;
   images?: string[];
   sports?: { name: string }[];
+}
+
+// ✅ Match the GroundCard type properly (id: number)
+interface Ground extends Omit<BaseGround, "id"> {
+  id: number;
 }
 
 export default function AdminPage() {
@@ -33,8 +38,9 @@ export default function AdminPage() {
   const [role, setRole] = useState<"Admin" | "SuperAdmin" | "User">("Admin");
   const [activeTab, setActiveTab] = useState<TabType>("grounds");
   const [showAddForm, setShowAddForm] = useState(false);
+  const router = useRouter();
 
-  // Load role from localStorage
+  // ✅ Load role from localStorage
   useEffect(() => {
     const storedRole = localStorage.getItem("role") as
       | "Admin"
@@ -44,7 +50,14 @@ export default function AdminPage() {
     if (storedRole) setRole(storedRole);
   }, []);
 
-  // Fetch Stats from Backend
+  // ✅ Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    router.push("/login"); // Redirect to src/app/login/page.tsx
+  };
+
+  // Fetch stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -73,12 +86,11 @@ export default function AdminPage() {
     fetchStats();
   }, []);
 
-  // Fetch Grounds from Backend
+  // Fetch grounds
   useEffect(() => {
     const fetchGrounds = async () => {
       try {
         const token = localStorage.getItem("token");
-
         const response = await fetch("/api/grounds", {
           headers: {
             "Content-Type": "application/json",
@@ -90,19 +102,18 @@ export default function AdminPage() {
 
         const data: BackendGround[] = await response.json();
 
-        const mappedGrounds: Ground[] = data.map((g: BackendGround) => {
-          const idNumber = Number(g._id);
-          return {
-            id: isNaN(idNumber) ? 0 : idNumber,
-            name: g.name,
-            location:
-              typeof g.location === "string"
-                ? g.location
-                : g.location?.address || "Unknown",
-            image: g.images?.[0] || "/placeholder.png",
-            sports: g.sports?.map((s) => s.name) || [],
-          };
-        });
+        // Keep id as number (use array index)
+        const mappedGrounds: Ground[] = data.map((g, i) => ({
+          id: i,
+          _id: g._id,
+          name: g.name,
+          location:
+            typeof g.location === "string"
+              ? g.location
+              : g.location?.address || "Unknown",
+          image: g.images?.[0] || "/placeholder.png",
+          sports: g.sports?.map((s) => s.name) || [],
+        }));
 
         setGrounds(mappedGrounds);
       } catch (err) {
@@ -120,13 +131,27 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
 
-          {role === "Admin" && activeTab === "grounds" && (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md w-full sm:w-auto">
-              + Add New Ground
-            </button>
-          )}
+          <div className="flex gap-3">
+            {/* ✅ Show Add button only for Admin */}
+            {role === "Admin" && activeTab === "grounds" && (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="px-5 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md w-full sm:w-auto"
+              >
+                + Add New Ground
+              </button>
+            )}
+
+            {/* ✅ Logout button for Admin / SuperAdmin */}
+            {(role === "Admin" || role === "SuperAdmin") && (
+              <button
+                onClick={handleLogout}
+                className="px-5 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all shadow-md w-full sm:w-auto"
+              >
+                Logout
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
@@ -139,7 +164,8 @@ export default function AdminPage() {
                 activeTab === tab.key
                   ? "text-green-600 border-b-2 border-green-600"
                   : "text-gray-500 hover:text-green-500"
-              }`}>
+              }`}
+            >
               {tab.label}
             </button>
           ))}
@@ -148,25 +174,22 @@ export default function AdminPage() {
         {/* Content */}
         <div className="min-h-[600px] transition-all duration-300">
           {activeTab === "grounds" && (
-            <>
-              {/* Grounds List */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
-                {grounds.length > 0 ? (
-                  grounds.map((ground) => (
-                    <GroundCard
-                      key={ground.id}
-                      ground={ground}
-                      role={role}
-                      id={0}
-                    />
-                  ))
-                ) : (
-                  <p className="col-span-full text-gray-500 text-center">
-                    No grounds available yet.
-                  </p>
-                )}
-              </div>
-            </>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center">
+              {grounds.length > 0 ? (
+                grounds.map((ground) => (
+                  <GroundCard
+                    key={ground.id}
+                    ground={ground}
+                    role={role}
+                    id={ground.id}
+                  />
+                ))
+              ) : (
+                <p className="col-span-full text-gray-500 text-center">
+                  No grounds available yet.
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -177,9 +200,11 @@ export default function AdminPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-y-auto max-h-[90vh] relative animate-fadeIn">
             <button
               onClick={() => setShowAddForm(false)}
-              className="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-2xl">
+              className="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-2xl"
+            >
               ✕
             </button>
+
 
             <div className="p-6">
               <AddGroundForm />

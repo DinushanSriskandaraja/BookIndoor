@@ -7,18 +7,35 @@ import AdminTab from "../../components/AdminTab";
 export default function SuperAdminLandingPage() {
   const [activeTab, setActiveTab] = useState<"summary" | "admins">("summary");
 
+  const handleLogout = () => {
+    // ✅ Clear stored session data
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("role");
+    // ✅ Redirect to login page
+    window.location.href = "/login";
+  };
+
   return (
-    <div className="flex justify-center  py-10">
+    <div className="flex justify-center py-10 bg-gray-50 min-h-screen">
       {/* Full Width Container */}
       <div className="w-full max-w-9xl px-6 bg-white shadow-sm rounded-xl">
-        {/* Header */}
+        {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <h1 className="text-3xl font-bold text-green-800 p-6">
             Super Admin Dashboard
           </h1>
+
+          {/* ✅ Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 text-white font-semibold px-5 py-2 rounded-lg hover:bg-red-700 transition-all shadow-md"
+          >
+            Logout
+          </button>
         </div>
 
-        {/* Tabs Navigation (AdminPage Style) */}
+        {/* Tabs Navigation */}
         <div className="flex gap-4 mb-8 border-b border-gray-200 pb-2">
           {[
             { key: "summary", label: "Summary" },

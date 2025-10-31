@@ -12,9 +12,24 @@ import {
   MapPinIcon,
   ClockIcon,
   XMarkIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/solid";
 import Calendar from "@/components/Calendar";
 import PaymentForm from "@/components/PaymentForm";
+import AddGroundForm from "@/components/AddGroundForm"; // ✅ Import existing form
+// local helper to detect role (fallbacks to server endpoint)
+// This avoids relying on a specific export from "@/lib/auth"
+async function getUserRole(): Promise<"Admin" | "User" | null> {
+  try {
+    const res = await fetch("/api/auth/role");
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data?.role as "Admin" | "User") ?? null;
+  } catch (err) {
+    console.error("Failed to fetch user role:", err);
+    return null;
+  }
+}
 
 interface Location {
   address: string;
@@ -28,6 +43,7 @@ interface Sport {
 }
 
 interface Ground {
+  _id?: string;
   name: string;
   location: Location;
   sports: Sport[];
@@ -64,6 +80,17 @@ export default function UserGroundDetails() {
   );
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // ✅ For editing
+  const [role, setRole] = useState<"Admin" | "User" | null>(null);
+
+  // 🧩 Fetch user role
+  useEffect(() => {
+    const fetchRole = async () => {
+      const userRole = await getUserRole();
+      setRole(userRole);
+    };
+    fetchRole();
+  }, []);
 
   // 🧩 Fetch ground details
   useEffect(() => {
@@ -82,16 +109,14 @@ export default function UserGroundDetails() {
     if (id) fetchGround();
   }, [id]);
 
-  // 🌀 Auto image slider (every 3 seconds)
+  // 🌀 Auto image slider
   useEffect(() => {
     if (!ground || ground.images.length === 0) return;
-
     const interval = setInterval(() => {
       setCurrentImage((prev) =>
         prev === ground.images.length - 1 ? 0 : prev + 1
       );
     }, 3000);
-
     return () => clearInterval(interval);
   }, [ground]);
 
@@ -123,7 +148,7 @@ export default function UserGroundDetails() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
       {/* Image + Info Row */}
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-8 relative">
         {/* 🖼️ Image Carousel */}
         <div className="relative w-full lg:w-1/2 rounded-2xl overflow-hidden shadow-lg">
           <div className="relative h-64 sm:h-[26rem]">
@@ -159,9 +184,7 @@ export default function UserGroundDetails() {
         </div>
 
         {/* 🏟️ Ground Info */}
-        <div
-          className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}
-        >
+        <div className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}>
           <h1 className="text-2xl sm:text-3xl font-bold text-green-100 flex items-center gap-2">
             {ground.name}
           </h1>
@@ -200,34 +223,46 @@ export default function UserGroundDetails() {
               </span>
             ))}
           </div>
+
+          {/* ✏️ Admin Edit Button */}
+          {role === "Admin" && (
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="mt-4 inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg transition"
+            >
+              <PencilSquareIcon className="w-5 h-5" /> Edit Ground
+            </button>
+          )}
         </div>
       </div>
 
       {/* 🏀 Sports Selection */}
-      <div className={glassCardClasses}>
-        <h2 className="text-lg sm:text-xl font-semibold text-green-100 mb-4">
-          Select a Sport to Book
-        </h2>
-        <div className="flex flex-wrap gap-3 sm:gap-4">
-          {ground.sports.map((sport) => (
-            <button
-              key={sport.name}
-              onClick={() => {
-                setSelectedSport(sport.name);
-                setBookingDetails(null);
-                setShowCalendarModal(true);
-              }}
-              className={`px-4 py-2 sm:px-5 sm:py-3 rounded-xl border font-semibold text-sm sm:text-base transition ${
-                selectedSport === sport.name
-                  ? "bg-green-600 text-white border-green-600 scale-105"
-                  : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
-              }`}
-            >
-              {sport.name} – Rs {sport.pricePerHour}
-            </button>
-          ))}
+      {role !== "Admin" && (
+        <div className={glassCardClasses}>
+          <h2 className="text-lg sm:text-xl font-semibold text-green-100 mb-4">
+            Select a Sport to Book
+          </h2>
+          <div className="flex flex-wrap gap-3 sm:gap-4">
+            {ground.sports.map((sport) => (
+              <button
+                key={sport.name}
+                onClick={() => {
+                  setSelectedSport(sport.name);
+                  setBookingDetails(null);
+                  setShowCalendarModal(true);
+                }}
+                className={`px-4 py-2 sm:px-5 sm:py-3 rounded-xl border font-semibold text-sm sm:text-base transition ${
+                  selectedSport === sport.name
+                    ? "bg-green-600 text-white border-green-600 scale-105"
+                    : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
+                }`}
+              >
+                {sport.name} – Rs {sport.pricePerHour}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 📅 Calendar Modal */}
       {showCalendarModal && selectedSport && (
@@ -282,6 +317,22 @@ export default function UserGroundDetails() {
                 alert("Booking completed successfully!");
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* 🧾 Admin Edit Modal */}
+      {showEditModal && ground && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl w-11/12 max-w-3xl p-6 relative">
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+            <h3 className="text-xl font-semibold mb-4">Edit Ground Details</h3>
+            <AddGroundForm {...({ ground: ground, isEditing: true } as any)} />
           </div>
         </div>
       )}

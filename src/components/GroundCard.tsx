@@ -4,13 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 
 export interface Ground {
-  id: number;
+  _id: string;
   name: string;
   location: string;
   image: string;
   sports?: string[];
   facilities?: string[];
 }
+
 
 interface GroundCardProps {
   id: number;
@@ -19,7 +20,9 @@ interface GroundCardProps {
 }
 
 export default function GroundCard({ ground }: GroundCardProps) {
-  const link = `/user/ground/${ground.id}`;
+  const link = `/user/ground/${ground._id}`;
+
+
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-[400px]">

@@ -32,6 +32,7 @@ export default function PaymentForm({
     name: "",
     phone: "",
     nic: "",
+    email: "",
   });
 
   const [isAdvance, setIsAdvance] = useState(false);
@@ -43,20 +44,20 @@ export default function PaymentForm({
   };
 
   const finalAmount = isAdvance ? amount * 0.5 : amount;
-
   const toggleAdvancePayment = () => setIsAdvance((prev) => !prev);
 
   const handleBooking = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!userDetails.name || !userDetails.phone || !userDetails.nic) {
-      alert("Please fill in all your details.");
+    if (!userDetails.name || !userDetails.phone || !userDetails.nic || !userDetails.email) {
+      alert("Please fill in all your details including email.");
       return;
     }
 
     setLoading(true);
 
     try {
+      // Step 1: Create booking
       const response = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,25 +76,46 @@ export default function PaymentForm({
       });
 
       const data: BookingResponse = await response.json();
-
       if (!response.ok) {
         alert(data.error || "Booking failed!");
         setLoading(false);
         return;
       }
 
-      alert(
-        `✅ ${
-          isAdvance ? "Advance" : "Full"
-        } Payment of Rs.${finalAmount.toFixed(2)} successful! Booking ID: ${
-          data.bookingId
-        }`
-      );
+      console.log("✅ Booking created successfully:", data);
+
+      // Step 2: Send confirmation emails
+      const emailResponse = await fetch("/api/send-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: userDetails.email,
+          adminEmail: "groundadmin@example.com", // Replace with actual admin email or backend fetch
+          userName: userDetails.name,
+          groundName: bookingDetails.groundName,
+          bookingDate: bookingDetails.date,
+          bookingTime: bookingDetails.times.join(", "),
+          amount: `Rs.${finalAmount.toFixed(2)} (${isAdvance ? "Advance (50%)" : "Full"})`,
+        }),
+      });
+
+      const emailData = await emailResponse.json();
+      console.log("📧 Email API response:", emailData);
+
+      if (!emailResponse.ok) {
+        alert("Booking confirmed, but email failed to send.");
+      } else {
+        alert(
+          `✅ ${isAdvance ? "Advance" : "Full"} payment of Rs.${finalAmount.toFixed(
+            2
+          )} successful!\nBooking ID: ${data.bookingId}\nConfirmation email sent!`
+        );
+      }
 
       if (onPaymentSuccess) onPaymentSuccess(data);
     } catch (err) {
       console.error("Booking Error:", err);
-      alert("Failed to create booking. Please try again.");
+      alert("Failed to complete booking. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -110,34 +132,15 @@ export default function PaymentForm({
       >
         {/* Booking Summary */}
         <div className="bg-green-50 p-5 rounded-xl border border-green-200 shadow-inner">
-          <h3 className="font-semibold text-green-800 mb-3 text-lg">
-            Booking Summary
-          </h3>
+          <h3 className="font-semibold text-green-800 mb-3 text-lg">Booking Summary</h3>
           <div className="space-y-1 text-green-900">
-            <p>
-              <span className="font-medium">Ground:</span>{" "}
-              {bookingDetails.groundName}
-            </p>
-            <p>
-              <span className="font-medium">Location:</span>{" "}
-              {bookingDetails.location}
-            </p>
-            <p>
-              <span className="font-medium">Date:</span> {bookingDetails.date}
-            </p>
-            <p>
-              <span className="font-medium">Time:</span>{" "}
-              {bookingDetails.times.join(", ")}
-            </p>
-            <p>
-              <span className="font-medium">Payment Type:</span>{" "}
-              {isAdvance ? "Advance (50%)" : "Full"}
-            </p>
+            <p><span className="font-medium">Ground:</span> {bookingDetails.groundName}</p>
+            <p><span className="font-medium">Location:</span> {bookingDetails.location}</p>
+            <p><span className="font-medium">Date:</span> {bookingDetails.date}</p>
+            <p><span className="font-medium">Time:</span> {bookingDetails.times.join(", ")}</p>
+            <p><span className="font-medium">Payment Type:</span> {isAdvance ? "Advance (50%)" : "Full"}</p>
             <div className="mt-4 text-green-900 font-semibold text-lg text-center">
-              Total Amount:{" "}
-              <span className="text-green-700">
-                Rs.{finalAmount.toFixed(2)}
-              </span>
+              Total Amount: <span className="text-green-700">Rs.{finalAmount.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -159,47 +162,35 @@ export default function PaymentForm({
 
         {/* User Details */}
         <div className="space-y-4">
-          <div>
-            <label className="block text-green-700 font-medium mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={userDetails.name}
-              onChange={handleUserChange}
-              placeholder="Enter your full name"
-              className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-          </div>
-
-          <div>
-            <label className="block text-green-700 font-medium mb-1">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={userDetails.phone}
-              onChange={handleUserChange}
-              placeholder="Enter your phone number"
-              className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-          </div>
-
-          <div>
-            <label className="block text-green-700 font-medium mb-1">
-              NIC / Passport Number
-            </label>
-            <input
-              type="text"
-              name="nic"
-              value={userDetails.nic}
-              onChange={handleUserChange}
-              placeholder="Enter your NIC or Passport number"
-              className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-            />
-          </div>
+          {["name", "email", "phone", "nic"].map((field) => (
+            <div key={field}>
+              <label className="block text-green-700 font-medium mb-1">
+                {field === "name"
+                  ? "Full Name"
+                  : field === "email"
+                  ? "Email Address"
+                  : field === "phone"
+                  ? "Phone Number"
+                  : "NIC / Passport Number"}
+              </label>
+              <input
+                type={field === "email" ? "email" : field === "phone" ? "tel" : "text"}
+                name={field}
+                value={(userDetails as any)[field]}
+                onChange={handleUserChange}
+                placeholder={
+                  field === "name"
+                    ? "Enter your full name"
+                    : field === "email"
+                    ? "Enter your email address"
+                    : field === "phone"
+                    ? "Enter your phone number"
+                    : "Enter your NIC or Passport number"
+                }
+                className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+              />
+            </div>
+          ))}
         </div>
 
         <button

@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import GroundCard, { Ground as BaseGround } from "@/components/GroundCard";
 import GroundFilter from "@/components/GroundFilter";
 
 // ✅ Extend the Ground interface to accept string IDs from MongoDB
-interface Ground extends Omit<BaseGround, "id"> {
-  id: string | number;
+interface Ground extends BaseGround {
+  _id: any;
+  id: number;
 }
 
 // ✅ Define backend response type
@@ -30,6 +32,7 @@ export default function UserPage() {
     location: "",
     sport: "",
   });
+  const router = useRouter();
 
   useEffect(() => {
     const fetchGrounds = async () => {
@@ -41,7 +44,8 @@ export default function UserPage() {
 
         // ✅ Map backend response properly
         const mappedGrounds: Ground[] = data.map((g: BackendGround) => ({
-          id: g._id, // can now be string | number
+          _id: g._id,
+          id: Number(g._id), // Convert string ID to number
           name: g.name,
           location:
             typeof g.location === "string"
@@ -82,8 +86,18 @@ export default function UserPage() {
     });
   }, [grounds, filters]);
 
+  // ✅ Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    router.push("/login"); // ✅ Redirect to login page
+  };
+
   return (
     <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col overflow-x-hidden">
+      {/* ✅ Top bar with Logout button */}
+     
+
       {/* Page Header */}
       <section className="w-full max-w-[1600px] mx-auto flex-1 px-4 sm:px-8 py-16">
         <div className="text-center mb-12">
@@ -106,10 +120,11 @@ export default function UserPage() {
           {filteredGrounds.length > 0 ? (
             filteredGrounds.map((g) => (
               <GroundCard
-                key={g.id.toString()}
+                key={g._id?.toString() || g.id?.toString() || Math.random().toString()}
+
                 ground={g}
                 role="User"
-                id={0}
+                id={g.id}
               />
             ))
           ) : (
