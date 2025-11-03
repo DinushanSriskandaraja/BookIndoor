@@ -19,12 +19,12 @@ import PaymentForm from "@/components/PaymentForm";
 import AddGroundForm from "@/components/AddGroundForm"; // ✅ Import existing form
 // local helper to detect role (fallbacks to server endpoint)
 // This avoids relying on a specific export from "@/lib/auth"
-async function getUserRole(): Promise<"Admin" | "User" | null> {
+async function getUserRole(): Promise<"admin" | "user" | null> {
   try {
-    const res = await fetch("/api/auth/role");
-    if (!res.ok) return null;
-    const data = await res.json();
-    return (data?.role as "Admin" | "User") ?? null;
+    const res = localStorage.getItem("user");
+    // if (!res.ok) return null;
+    // const data = await res.json();
+    return (res as "admin" | "user") ?? null;
   } catch (err) {
     console.error("Failed to fetch user role:", err);
     return null;
@@ -81,12 +81,13 @@ export default function UserGroundDetails() {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false); // ✅ For editing
-  const [role, setRole] = useState<"Admin" | "User" | null>(null);
+  const [role, setRole] = useState<"admin" | "user" | null>(null);
 
   // 🧩 Fetch user role
   useEffect(() => {
     const fetchRole = async () => {
       const userRole = await getUserRole();
+      console.log("Fetched user role:", userRole);
       setRole(userRole);
     };
     fetchRole();
@@ -225,19 +226,19 @@ export default function UserGroundDetails() {
           </div>
 
           {/* ✏️ Admin Edit Button */}
-          {role === "Admin" && (
+          {role === "admin" && (
             <button
               onClick={() => setShowEditModal(true)}
               className="mt-4 inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg transition"
             >
-              <PencilSquareIcon className="w-5 h-5" /> Edit Ground
+              <PencilSquareIcon className="w-5 h-5" /> 
             </button>
           )}
         </div>
       </div>
 
       {/* 🏀 Sports Selection */}
-      {role !== "Admin" && (
+      {role !== "admin" && (
         <div className={glassCardClasses}>
           <h2 className="text-lg sm:text-xl font-semibold text-green-100 mb-4">
             Select a Sport to Book

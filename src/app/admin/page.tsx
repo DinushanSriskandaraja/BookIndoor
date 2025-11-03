@@ -53,7 +53,8 @@ export default function AdminPage() {
   // ✅ Handle logout
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("role");
+    localStorage.removeItem("user");
+    localStorage.removeItem("id");
     router.push("/login"); // Redirect to src/app/login/page.tsx
   };
 
