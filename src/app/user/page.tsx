@@ -27,6 +27,7 @@ interface FilterState {
 
 export default function UserPage() {
   const [grounds, setGrounds] = useState<Ground[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     name: "",
     location: "",
@@ -58,6 +59,8 @@ export default function UserPage() {
         setGrounds(mappedGrounds);
       } catch (err) {
         console.error("❌ Error fetching grounds:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -89,7 +92,8 @@ export default function UserPage() {
   // ✅ Logout function
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("role");
+    localStorage.removeItem("user");
+    localStorage.removeItem("id");
     router.push("/login"); // ✅ Redirect to login page
   };
 
@@ -100,12 +104,13 @@ export default function UserPage() {
       {/* Page Header */}
       <section className="w-full max-w-[1600px] mx-auto flex-1 px-4 sm:px-8 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-green-800">
-            Explore Our Grounds
-          </h1>
-          <p className="text-lg sm:text-xl text-green-600 mt-2">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-green-800">
             Find and book your perfect indoor ground today!
-          </p>
+
+          </h1>
+          {/* <p className="text-lg sm:text-xl text-green-600 mt-2">
+            Find and book your perfect indoor ground today!
+          </p> */}
         </div>
 
         {/* ✅ Filter Section */}
@@ -115,8 +120,17 @@ export default function UserPage() {
         />
 
         {/* ✅ Grounds Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center mt-10">
-          {filteredGrounds.length > 0 ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-10 justify-items-center mt-10">
+          {loading ? (
+            <div className="col-span-full flex items-center justify-center min-h-[40vh]">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full border-4 border-slate-100 border-t-emerald-600 animate-spin"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          ) : filteredGrounds.length > 0 ? (
             filteredGrounds.map((g) => (
               <GroundCard
                 key={
@@ -125,13 +139,13 @@ export default function UserPage() {
                   Math.random().toString()
                 }
                 ground={g}
-                role="User"
+                role="user"
                 id={g.id}
               />
             ))
           ) : (
             <p className="col-span-full text-center text-gray-500 text-lg">
-              No grounds found matching your filters.
+              Grounds loading...
             </p>
           )}
         </div>

@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 
+interface BookingItem {
+  date: string;
+  times: string[];
+}
+
 interface BookingSummary {
   groundName: string;
   location: string;
-  date: string;
-  times: string[];
   groundId: string;
   sportName: string;
+  bookings: BookingItem[];
 }
 
 interface BookingResponse {
-  bookingId: string;
+  bookingIds: string[];
   message?: string;
   error?: string;
 }
@@ -76,11 +80,15 @@ export default function PaymentForm({
     setLoading(true);
 
     try {
+      // Step 0: Get token
+      const token = localStorage.getItem("token");
+
       // Step 1: Create booking
       const response = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          token, // ✅ Pass token to link booking to user
           ground: bookingDetails.groundId,
           sportName: bookingDetails.sportName,
           guest: {
@@ -88,8 +96,10 @@ export default function PaymentForm({
             phone: userDetails.phone,
             nicNumber: userDetails.nic,
           },
-          date: bookingDetails.date,
-          timeSlots: bookingDetails.times.map((t) => ({ startTime: t })),
+          bookings: bookingDetails.bookings.map((b) => ({
+            date: b.date,
+            timeSlots: b.times.map((t) => ({ startTime: t })),
+          })),
           paymentStatus: isAdvance ? "advanced_paid" : "full_paid",
         }),
       });
@@ -101,9 +111,15 @@ export default function PaymentForm({
         return;
       }
 
-      console.log("✅ Booking created successfully:", data);
+      console.log("✅ Bookings created successfully:", data);
 
       // Step 2: Send confirmation emails
+      const isSingleDate = bookingDetails.bookings.length === 1;
+      const bookingDateParam = isSingleDate ? bookingDetails.bookings[0].date : "Multiple Dates";
+      const bookingTimeParam = isSingleDate
+        ? bookingDetails.bookings[0].times.join(", ")
+        : bookingDetails.bookings.map((b) => `${b.date}: ${b.times.join(", ")}`).join("\n");
+
       const emailResponse = await fetch("/api/send-confirmation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,11 +128,10 @@ export default function PaymentForm({
           adminEmail: "groundadmin@example.com",
           userName: userDetails.name,
           groundName: bookingDetails.groundName,
-          bookingDate: bookingDetails.date,
-          bookingTime: bookingDetails.times.join(", "),
-          amount: `Rs.${finalAmount.toFixed(2)} (${
-            isAdvance ? "Advance (50%)" : "Full"
-          })`,
+          bookingDate: bookingDateParam,
+          bookingTime: bookingTimeParam,
+          amount: `Rs.${finalAmount.toFixed(2)} (${isAdvance ? "Advance (50%)" : "Full"
+            })`,
         }),
       });
 
@@ -124,13 +139,11 @@ export default function PaymentForm({
       console.log("📧 Email API response:", emailData);
 
       if (!emailResponse.ok) {
-        alert("Booking confirmed, but email failed to send.");
+        alert("Bookings confirmed, but email failed to send.");
       } else {
         alert(
-          `✅ ${
-            isAdvance ? "Advance" : "Full"
-          } payment of Rs.${finalAmount.toFixed(2)} successful!\nBooking ID: ${
-            data.bookingId
+          `✅ ${isAdvance ? "Advance" : "Full"
+          } payment of Rs.${finalAmount.toFixed(2)} successful!\nBookings ID count: ${data.bookingIds.length
           }\nConfirmation email sent!`
         );
       }
@@ -165,19 +178,25 @@ export default function PaymentForm({
               <span className="font-medium">Location:</span>{" "}
               {bookingDetails.location}
             </p>
-            <p>
-              <span className="font-medium">Date:</span> {bookingDetails.date}
-            </p>
-            <p>
-              <span className="font-medium">Time:</span>{" "}
-              {bookingDetails.times.join(", ")}
-            </p>
-            <p>
+            <div className="max-h-40 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-green-200">
+              {bookingDetails.bookings.map((booking, index) => (
+                <div key={index} className="bg-white/50 p-3 rounded-lg border border-green-100/50">
+                  <p className="text-sm font-bold text-green-800 flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                    {booking.date}
+                  </p>
+                  <p className="text-sm text-green-700 mt-1 pl-4">
+                    {booking.times.join(", ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="border-t border-green-200 pt-3">
               <span className="font-medium">Payment Type:</span>{" "}
               {isAdvance ? "Advance (50%)" : "Full"}
             </p>
-            <div className="mt-4 text-green-900 font-semibold text-lg text-center">
-              Total Amount:{" "}
+            <div className="mt-4 text-green-900 font-bold text-xl text-center bg-green-100 py-3 rounded-lg shadow-sm">
+              Grand Total:{" "}
               <span className="text-green-700">
                 Rs.{finalAmount.toFixed(2)}
               </span>
@@ -190,11 +209,10 @@ export default function PaymentForm({
           <button
             type="button"
             onClick={toggleAdvancePayment}
-            className={`px-4 py-2 rounded-lg font-semibold transition ${
-              isAdvance
-                ? "bg-green-700 text-white"
-                : "bg-green-100 text-green-700 border border-green-300"
-            }`}>
+            className={`px-4 py-2 rounded-lg font-semibold transition ${isAdvance
+              ? "bg-green-700 text-white"
+              : "bg-green-100 text-green-700 border border-green-300"
+              }`}>
             {isAdvance ? "Cancel Advance Payment" : "Pay 50% Advance"}
           </button>
         </div>
@@ -208,18 +226,18 @@ export default function PaymentForm({
                   {field === "name"
                     ? "Full Name"
                     : field === "email"
-                    ? "Email Address"
-                    : field === "phone"
-                    ? "Phone Number"
-                    : "NIC / Passport Number"}
+                      ? "Email Address"
+                      : field === "phone"
+                        ? "Phone Number"
+                        : "NIC / Passport Number"}
                 </label>
                 <input
                   type={
                     field === "email"
                       ? "email"
                       : field === "phone"
-                      ? "tel"
-                      : "text"
+                        ? "tel"
+                        : "text"
                   }
                   name={field}
                   value={userDetails[field]}
@@ -228,10 +246,10 @@ export default function PaymentForm({
                     field === "name"
                       ? "Enter your full name"
                       : field === "email"
-                      ? "Enter your email address"
-                      : field === "phone"
-                      ? "Enter your phone number"
-                      : "Enter your NIC or Passport number"
+                        ? "Enter your email address"
+                        : field === "phone"
+                          ? "Enter your phone number"
+                          : "Enter your NIC or Passport number"
                   }
                   className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                 />
@@ -243,12 +261,13 @@ export default function PaymentForm({
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-4 px-4 py-3 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-800 transition disabled:opacity-50">
+          className="w-full mt-4 px-4 py-3 bg-green-700 !text-white font-bold rounded-lg hover:bg-green-800 transition disabled:opacity-50 shadow-lg"
+        >
           {loading
             ? "Processing..."
             : isAdvance
-            ? `Pay Rs.${finalAmount.toFixed(2)} (50% Advance)`
-            : `Pay Rs.${finalAmount.toFixed(2)} & Confirm Booking`}
+              ? `Pay Rs.${finalAmount.toFixed(2)} (50% Advance)`
+              : `Pay Rs.${finalAmount.toFixed(2)} & Confirm Booking`}
         </button>
       </form>
     </div>

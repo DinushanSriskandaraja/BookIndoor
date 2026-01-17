@@ -8,27 +8,21 @@ import CTASection from "@/components/CTASection";
 
 export default function HomePage() {
   return (
-    <main className="w-full overflow-x-hidden text-white bg-white">
+    <main className="w-full overflow-x-hidden bg-white selection:bg-emerald-200 selection:text-emerald-900">
       {/* Hero Section */}
       <HeroSection />
 
-      {/* About / Features */}
+      {/* About / Features - White background */}
       <AboutSection />
 
-      {/* Stats / Numbers */}
+      {/* Stats / Numbers - Deep Slate background */}
       <StatsSection />
 
-      {/* Auto-scrolling Grounds Carousel */}
+      {/* Auto-scrolling Grounds Carousel - White background */}
       <GroundsCarousel />
 
-      
-
-      {/* Call To Action */}
+      {/* Call To Action - Deep Slate background */}
       <CTASection />
-
-      {/* <TermsSection /> */}
-
-    
     </main>
   );
 }

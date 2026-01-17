@@ -3,14 +3,17 @@ import dbConnect from "@/lib/mongodb";
 import Booking from "@/models/Booking";
 import Ground from "@/models/Grounds";
 
+interface BookingItem {
+  date: string; // "YYYY-MM-DD"
+  timeSlots: { startTime: string }[];
+}
+
 interface BookingInput {
   token?: string; // optional for guest
   guest?: { name: string; email?: string; phone: string; nicNumber: string };
   ground: string;
   sportName: string;
-  date: string; // "YYYY-MM-DD"
-  timeSlots: { startTime: string }[];
-  totalAmount: number;
+  bookings: BookingItem[];
   paymentStatus: "advanced_paid" | "full_paid";
 }
 
@@ -39,33 +42,42 @@ function generateTimeSlots(from: string, to: string) {
   return slots;
 }
 
-// ✅ CREATE Booking
+// ✅ CREATE Booking (Supports Multiple Dates & Authenticated Users)
 export async function POST(req: Request) {
   try {
     await dbConnect();
     const body: BookingInput = await req.json();
+
+    // 0️⃣ Authenticate if token present
+    let userId = null;
+    if (body.token) {
+      const { verifyToken } = await import("@/lib/auth");
+      const decoded = verifyToken(body.token);
+      if (decoded) userId = decoded.id;
+    }
 
     // 1️⃣ Find Ground
     const ground = await Ground.findById(body.ground);
     if (!ground)
       return NextResponse.json({ error: "Ground not found" }, { status: 404 });
 
-    // 2️⃣ Check slot availability
-    const existing = await Booking.find({
-      ground: body.ground,
-      date: body.date,
-      "timeSlots.startTime": { $in: body.timeSlots.map((t) => t.startTime) },
-    });
+    // 2️⃣ Check slot availability for all dates
+    for (const item of body.bookings) {
+      const existing = await Booking.find({
+        ground: body.ground,
+        date: item.date,
+        "timeSlots.startTime": { $in: item.timeSlots.map((t) => t.startTime) },
+      });
 
-    if (existing.length > 0) {
-      return NextResponse.json(
-        { error: "Some time slots are already booked" },
-        { status: 400 }
-      );
+      if (existing.length > 0) {
+        return NextResponse.json(
+          { error: `Some time slots on ${item.date} are already booked` },
+          { status: 400 }
+        );
+      }
     }
 
-    // 3️⃣ Recalculate total securely
-    const slotCount = body.timeSlots.length;
+    // 3️⃣ Find Sport and calculate total
     const sport = ground.sports.find(
       (s: { name: string }) => s.name === body.sportName
     );
@@ -73,45 +85,89 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Sport not found" }, { status: 404 });
 
     const pricePerSlot = sport.pricePerHour;
-    const totalAmount = slotCount * pricePerSlot;
-
-    // 4️⃣ Determine payment status
     const paymentStatus =
       body.paymentStatus === "full_paid" ? "full_paid" : "advanced_paid";
 
-    // 5️⃣ Create booking
-    const booking = await Booking.create({
-      ground: body.ground,
-      sportName: body.sportName,
-      guest: body.guest,
-      date: body.date,
-      timeSlots: body.timeSlots, // e.g. [{ startTime: "08:00-08:30" }]
-      totalAmount,
-      paymentStatus,
-      status: "reserved",
-    });
+    const createdBookings = [];
+    let grandTotal = 0;
+
+    // 4️⃣ Create booking documents
+    for (const item of body.bookings) {
+      const slotCount = item.timeSlots.length;
+      const totalAmount = slotCount * pricePerSlot;
+      grandTotal += totalAmount;
+
+      const booking = await Booking.create({
+        ground: body.ground,
+        sportName: body.sportName,
+        user: userId, // ✅ Link to user if logged in
+        guest: body.guest,
+        date: item.date,
+        timeSlots: item.timeSlots,
+        totalAmount,
+        paymentStatus,
+        status: "reserved",
+      });
+      createdBookings.push(booking._id);
+    }
 
     return NextResponse.json({
       success: true,
-      bookingId: booking._id,
-      amount: totalAmount,
+      bookingIds: createdBookings,
+      amount: grandTotal,
     });
   } catch (err: unknown) {
     console.error("Booking Creation Error:", err);
     return NextResponse.json(
-      { error: "Failed to create booking" },
+      { error: "Failed to create bookings" },
       { status: 500 }
     );
   }
 }
 
-// ✅ GET Booked Slots for a Ground on a Date
+// ✅ GET Bookings (Available slots OR List for Admin)
 export async function GET(req: Request) {
   try {
     await dbConnect();
     const url = new URL(req.url);
     const groundId = url.searchParams.get("ground");
     const date = url.searchParams.get("date");
+    const token = url.searchParams.get("token");
+
+    // 🛡️ Admin List Mode: Fetch all bookings for admin's grounds
+    const adminGroundId = url.searchParams.get("ground");
+
+    if (token && !date) {
+      const { verifyToken } = await import("@/lib/auth");
+      const decoded = verifyToken(token);
+      if (!decoded || !["admin", "super_admin"].includes(decoded.role)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+
+      let query: any = {};
+      if (decoded.role === "admin") {
+        const ownedGrounds = await Ground.find({ owner: decoded.id }).select("_id");
+        const ownedIds = ownedGrounds.map(g => g._id.toString());
+
+        if (adminGroundId) {
+          if (!ownedIds.includes(adminGroundId)) {
+            return NextResponse.json({ error: "Forbidden: You don't own this ground" }, { status: 403 });
+          }
+          query = { ground: adminGroundId };
+        } else {
+          query = { ground: { $in: ownedIds } };
+        }
+      } else if (adminGroundId) {
+        // SuperAdmin can filter by any ground
+        query = { ground: adminGroundId };
+      }
+
+      const bookings = await Booking.find(query)
+        .populate("ground", "name")
+        .sort({ date: -1, createdAt: -1 });
+
+      return NextResponse.json(bookings);
+    }
 
     if (!groundId || !date) {
       return NextResponse.json(
@@ -120,7 +176,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // 🏟️ Get Ground Data
+    // 🏟️ Get Ground Data for Slot Generation
     const ground = await Ground.findById(groundId);
     if (!ground) {
       return NextResponse.json({ error: "Ground not found" }, { status: 404 });
@@ -129,17 +185,17 @@ export async function GET(req: Request) {
     const { from, to } = ground.availableTime;
     const timeSlots = generateTimeSlots(from, to);
 
-    // 📅 Get Bookings for that date
+    // 📅 Get Bookings for that specific date and ground
     const bookings = await Booking.find({ ground: groundId, date });
 
-    // Flatten booked slots from all bookings
+    // Flatten booked slots
     const bookedSet = new Set(
       bookings.flatMap((b) =>
         b.timeSlots.map((ts: { startTime: string }) => ts.startTime)
       )
     );
 
-    // 🟢 Build Response with slot status
+    // 🟢 Return slot availability
     const response = timeSlots.map((slot) => ({
       timeSlot: slot,
       status: bookedSet.has(slot) ? "booked" : "available",
@@ -149,7 +205,7 @@ export async function GET(req: Request) {
   } catch (err: unknown) {
     console.error("Fetch Bookings Error:", err);
     return NextResponse.json(
-      { error: "Failed to fetch available slots" },
+      { error: "Failed to fetch bookings" },
       { status: 500 }
     );
   }

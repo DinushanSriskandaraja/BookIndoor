@@ -80,8 +80,9 @@ export async function PUT(
     const { id } =
       context.params instanceof Promise ? await context.params : context.params;
 
-    const body = await req.json();
-    const decoded = verifyToken(body.token);
+    const formData = await req.formData();
+    const token = formData.get("token") as string;
+    const decoded = verifyToken(token);
     if (!decoded)
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
@@ -96,15 +97,62 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    Object.assign(ground, body);
-    await ground.save();
+    // ✅ Update fields if present in formData
+    if (formData.has("name")) ground.name = formData.get("name") as string;
+    if (formData.has("contactNumber")) ground.contactNumber = formData.get("contactNumber") as string;
+    if (formData.has("groundType")) ground.groundType = formData.get("groundType") as string;
 
+    if (formData.has("location[address]")) {
+      ground.location = {
+        address: formData.get("location[address]") as string,
+        lat: formData.get("location[lat]") ? Number(formData.get("location[lat]")) : ground.location.lat,
+        lng: formData.get("location[lng]") ? Number(formData.get("location[lng]")) : ground.location.lng,
+      };
+    }
+
+    if (formData.has("availableTime[from]") && formData.has("availableTime[to]")) {
+      ground.availableTime = {
+        from: formData.get("availableTime[from]") as string,
+        to: formData.get("availableTime[to]") as string,
+      };
+    }
+
+    if (formData.has("sports")) {
+      ground.sports = JSON.parse(formData.get("sports") as string);
+    }
+
+    if (formData.has("amenities")) {
+      ground.amenities = JSON.parse(formData.get("amenities") as string);
+    }
+
+    // ✅ Handle new images
+    const files = formData.getAll("images") as File[];
+    if (files.length > 0) {
+      const newImages: string[] = [];
+      const cloudinary = (await import("@/lib/cloudinary")).default;
+
+      for (const file of files) {
+        if (!(file instanceof File)) continue;
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const base64 = buffer.toString("base64");
+        const dataURI = `data:${file.type};base64,${base64}`;
+
+        const uploadRes = await cloudinary.uploader.upload(dataURI, {
+          folder: "grounds",
+        });
+        newImages.push(uploadRes.secure_url);
+      }
+      // Depending on strategy: either replace or append. Let's append if specific action, but here we replace for simplicity for now.
+      ground.images = [...ground.images, ...newImages];
+    }
+
+    await ground.save();
     return NextResponse.json({ success: true, ground });
-  } catch (err) {
-    const error = err as AppError;
-    console.error("Ground Update Error:", error);
-    if (error.name === "ValidationError") {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+  } catch (err: any) {
+    console.error("Ground Update Error:", err);
+    if (err.name === "ValidationError") {
+      return NextResponse.json({ error: "Validation Failed", details: err.message }, { status: 400 });
     }
     return NextResponse.json(
       { error: "Failed to update ground" },

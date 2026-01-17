@@ -42,20 +42,45 @@ export async function sendBookingConfirmationEmail({
     });
 
     // HTML email body
+    const isMultiDate = bookingDate === "Multiple Dates" || bookingTime.includes('\n');
+
     const htmlContent = `
-      <div style="font-family: Arial, sans-serif; padding: 16px; background: #f9f9f9;">
-        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <h2 style="color: #2E8B57;">${subject}</h2>
-          <p>Hi <strong>${userName}</strong>,</p>
-          <p>Here are your booking details:</p>
-          <ul style="line-height: 1.6;">
-            <li><strong>Ground:</strong> ${groundName}</li>
-            <li><strong>Date:</strong> ${bookingDate}</li>
-            <li><strong>Time:</strong> ${bookingTime}</li>
-            <li><strong>Amount:</strong> LKR ${amount}</li>
-          </ul>
-          <p style="margin-top: 16px;">Thank you for choosing <strong>BookIndoor</strong>!</p>
-          <p style="color: #555;">Best regards,<br/>The BookIndoor Team</p>
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 24px; background-color: #f4f7f6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e1e8e5;">
+          <div style="background-color: #2E8B57; padding: 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">${subject}</h1>
+          </div>
+          
+          <div style="padding: 30px;">
+            <p style="font-size: 16px; margin-top: 0;">Hi <strong>${userName}</strong>,</p>
+            <p style="font-size: 15px; color: #555;">Your booking at <strong>${groundName}</strong> has been confirmed! Here are the details of your reservation:</p>
+            
+            <div style="background-color: #f9fbf9; border-left: 4px solid #2E8B57; padding: 20px; margin: 25px 0; border-radius: 4px;">
+              <p style="margin: 0 0 10px 0; font-size: 15px;"><strong>📍 Ground:</strong> ${groundName}</p>
+              
+              ${isMultiDate
+        ? `<p style="margin: 0 0 8px 0; font-size: 15px;"><strong>📅 Booking Schedule:</strong></p>
+                   <div style="margin-left: 10px; font-size: 14px; color: #444;">
+                     ${bookingTime.split('\n').map(line => `<div style="margin-bottom: 6px; padding: 4px 0; border-bottom: 1px dashed #eee;">• ${line}</div>`).join('')}
+                   </div>`
+        : `<p style="margin: 0 0 8px 0; font-size: 15px;"><strong>📅 Date:</strong> ${bookingDate}</p>
+                   <p style="margin: 0 0 15px 0; font-size: 15px;"><strong>⏰ Time:</strong> ${bookingTime}</p>`
+      }
+              
+              <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #eef2f0;">
+                <p style="margin: 0; font-size: 18px; color: #2E8B57;"><strong>Total Amount:</strong> ${amount}</p>
+              </div>
+            </div>
+            
+            <p style="font-size: 15px; line-height: 1.5;">We look forward to seeing you at the ground! If you need to make any changes, please contact the ground admin directly.</p>
+            
+            <p style="margin-top: 30px; font-size: 15px;">Thank you for choosing <strong>BookIndoor</strong>!</p>
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eeeeee; font-size: 13px; color: #888; text-align: center;">
+              <p style="margin: 0;">Best regards,<br/><strong>The BookIndoor Team</strong></p>
+              <p style="margin: 10px 0 0 0;">© ${new Date().getFullYear()} BookIndoor. All rights reserved.</p>
+            </div>
+          </div>
         </div>
       </div>
     `;

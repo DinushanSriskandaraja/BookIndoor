@@ -2,29 +2,40 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, JSX } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
-  WifiIcon,
-  UserGroupIcon,
-  ShoppingBagIcon,
-  TruckIcon,
-  HomeIcon,
   MapPinIcon,
   ClockIcon,
   XMarkIcon,
   PencilSquareIcon,
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  HomeIcon,
 } from "@heroicons/react/24/solid";
+import {
+  FaChair,
+  FaUtensils,
+  FaRestroom,
+  FaPersonDress,
+  FaPlus,
+  FaLightbulb,
+  FaWifi,
+  FaTruck,
+  FaHeart,
+  FaLock,
+  FaGlassWater
+} from "react-icons/fa6";
 import Calendar from "@/components/Calendar";
 import PaymentForm from "@/components/PaymentForm";
 import AddGroundForm from "@/components/AddGroundForm"; // ✅ Import existing form
 // local helper to detect role (fallbacks to server endpoint)
 // This avoids relying on a specific export from "@/lib/auth"
-async function getUserRole(): Promise<"admin" | "user" | null> {
+async function getUserRole(): Promise<"admin" | "super_admin" | "user" | null> {
   try {
-    const res = localStorage.getItem("user");
-    // if (!res.ok) return null;
-    // const data = await res.json();
-    return (res as "admin" | "user") ?? null;
+    const role = localStorage.getItem("user");
+    return (role as any) ?? null;
   } catch (err) {
     console.error("Failed to fetch user role:", err);
     return null;
@@ -55,16 +66,26 @@ interface Ground {
   };
 }
 
-interface BookingDetails {
+interface BookingItem {
   date: string;
   times: string[];
 }
 
+interface BookingDetails {
+  bookings: BookingItem[];
+}
+
 const facilityIcons: Record<string, JSX.Element> = {
-  Parking: <TruckIcon className="w-5 h-5 text-green-500" />,
-  Lighting: <WifiIcon className="w-5 h-5 text-green-500" />,
-  Restrooms: <UserGroupIcon className="w-5 h-5 text-green-500" />,
-  Cafeteria: <ShoppingBagIcon className="w-5 h-5 text-green-500" />,
+  Parking: <FaTruck className="w-5 h-5 text-emerald-600" />,
+  Lighting: <FaLightbulb className="w-5 h-5 text-emerald-600" />,
+  Restrooms: <FaRestroom className="w-5 h-5 text-emerald-600" />,
+  Cafeteria: <FaUtensils className="w-5 h-5 text-emerald-600" />,
+  "Changing Rooms": <FaPersonDress className="w-5 h-5 text-emerald-600" />,
+  "Seating Area": <FaChair className="w-5 h-5 text-emerald-600" />,
+  "First Aid": <FaPlus className="w-5 h-5 text-emerald-600" />,
+  Wifi: <FaWifi className="w-5 h-5 text-emerald-600" />,
+  Water: <FaGlassWater className="w-5 h-5 text-emerald-600" />,
+  Lockers: <FaLock className="w-5 h-5 text-emerald-600" />,
 };
 
 export default function UserGroundDetails() {
@@ -81,13 +102,12 @@ export default function UserGroundDetails() {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false); // ✅ For editing
-  const [role, setRole] = useState<"admin" | "user" | null>(null);
+  const [role, setRole] = useState<"admin" | "super_admin" | "user" | null>(null);
 
   // 🧩 Fetch user role
   useEffect(() => {
     const fetchRole = async () => {
       const userRole = await getUserRole();
-      console.log("Fetched user role:", userRole);
       setRole(userRole);
     };
     fetchRole();
@@ -124,7 +144,16 @@ export default function UserGroundDetails() {
   if (!id)
     return <p className="text-center mt-10 text-red-500">Invalid ground ID</p>;
   if (loading)
-    return <p className="text-center mt-10 text-green-500">Loading...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-slate-100 border-t-emerald-600 animate-spin"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
   if (!ground)
     return <p className="text-center mt-10 text-red-500">Ground not found</p>;
 
@@ -137,132 +166,191 @@ export default function UserGroundDetails() {
       prev === ground.images.length - 1 ? 0 : prev + 1
     );
 
-  const glassCardClasses =
-    "bg-white/10 backdrop-blur-md border border-green-900/30 rounded-2xl shadow-lg p-6";
+  const glassCardClasses = "glass-card p-6 sm:p-8";
 
   const calculateAmount = () => {
     if (!selectedSport || !bookingDetails) return 0;
     const sport = ground.sports.find((s) => s.name === selectedSport);
-    return sport ? sport.pricePerHour * bookingDetails.times.length : 0;
+    if (!sport) return 0;
+
+    const totalSlots = bookingDetails.bookings.reduce(
+      (acc, b) => acc + b.times.length,
+      0
+    );
+    return sport.pricePerHour * totalSlots;
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
-      {/* Image + Info Row */}
-      <div className="flex flex-col lg:flex-row gap-8 relative">
-        {/* 🖼️ Image Carousel */}
-        <div className="relative w-full lg:w-1/2 rounded-2xl overflow-hidden shadow-lg">
-          <div className="relative h-64 sm:h-[26rem]">
+      {/* 🖼️ Hero Image Gallery & Info Section */}
+      <div className="flex flex-col lg:flex-row gap-8 items-stretch">
+        <div className="relative w-full lg:w-3/5 h-[300px] sm:h-[400px] md:h-[500px] rounded-xl overflow-hidden shadow-2xl group order-1">
+          <div className="flex h-full transition-transform duration-700 ease-out"
+            style={{ transform: `translateX(-${currentImage * 100}%)` }}>
             {ground.images.map((img, index) => (
-              <div
-                key={index}
-                className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${
-                  index === currentImage ? "opacity-100" : "opacity-0"
-                }`}>
+              <div key={index} className="relative min-w-full h-full">
                 <Image
                   src={img}
-                  alt={`${ground.name}-${index}`}
+                  alt={ground.name}
                   fill
-                  priority={index === 0}
                   className="object-cover"
                 />
               </div>
             ))}
           </div>
+
+          {/* Navigation Arrows */}
           <button
             onClick={prevImage}
-            className="absolute top-1/2 left-3 sm:left-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
-            ◀
+            className="absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white shadow-xl hover:bg-white/40 transition-all opacity-0 group-hover:opacity-100">
+            <ChevronLeftIcon className="w-6 h-6" />
           </button>
           <button
             onClick={nextImage}
-            className="absolute top-1/2 right-3 sm:right-4 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow hover:scale-105 transition">
-            ▶
+            className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white shadow-xl hover:bg-white/40 transition-all opacity-0 group-hover:opacity-100">
+            <ChevronRightIcon className="w-6 h-6" />
           </button>
-        </div>
 
-        {/* 🏟️ Ground Info */}
-        <div
-          className={`${glassCardClasses} flex-1 flex flex-col justify-center space-y-4`}>
-          <h1 className="text-2xl sm:text-3xl font-bold text-green-100 flex items-center gap-2">
-            {ground.name}
-          </h1>
-
-          <p className="text-green-200 flex items-center gap-2 flex-wrap">
-            <MapPinIcon className="w-5 h-5 text-green-400" />
-            {ground.location.address}
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                ground.location.address
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-green-300 hover:underline text-sm ml-2">
-              View on Map
-            </a>
-          </p>
-
-          <div className="flex items-center gap-2 text-green-200">
-            <ClockIcon className="w-5 h-5 text-green-400" />
-            Open Time: {ground.availableTime.from} – {ground.availableTime.to}
-          </div>
-
-          {/* Facilities */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            {ground.amenities.map((facility) => (
-              <span
-                key={facility}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-700 text-white rounded-full text-sm sm:text-base font-medium flex items-center gap-1">
-                {facilityIcons[facility] || (
-                  <HomeIcon className="w-5 h-5 text-green-400" />
-                )}
-                {facility}
-              </span>
+          {/* Image Dots */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/20 backdrop-blur-sm rounded-xl">
+            {ground.images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentImage(i)}
+                className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-xl transition-all ${currentImage === i ? "bg-white w-6" : "bg-white/50 hover:bg-white/80"}`}
+              />
             ))}
           </div>
+        </div>
 
-          {/* ✏️ Admin Edit Button */}
-          {role === "admin" && (
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="mt-4 inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg transition">
-              <PencilSquareIcon className="w-5 h-5" />
-            </button>
-          )}
+        {/* 🏟️ Ground Hero Info Section */}
+        <div className={`${glassCardClasses} w-full lg:w-2/5 flex flex-col justify-center order-2`}>
+          <div className="space-y-6">
+            <div className="flex items-start justify-between">
+              <span className="inline-block px-4 py-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-widest rounded-xl">
+                Indoor Arena
+              </span>
+              {role === "admin" && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="p-2 text-slate-400 hover:text-emerald-600 transition-colors"
+                  title="Edit Details"
+                >
+                  <PencilSquareIcon className="w-6 h-6" />
+                </button>
+              )}
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 font-outfit leading-tight">
+              {ground.name}
+            </h1>
+
+            <div className="space-y-4 pt-2">
+              <p className="text-slate-600 flex items-start gap-3 text-base sm:text-lg font-medium leading-relaxed">
+                <MapPinIcon className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <span>
+                  {ground.location.address}
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ground.location.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-600 hover:text-emerald-700 font-bold ml-2 underline-offset-4 hover:underline transition-all">
+                    Navigate
+                  </a>
+                </span>
+              </p>
+
+              <div className="flex items-center gap-3 text-slate-700 font-semibold bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <ClockIcon className="w-6 h-6 text-emerald-600" />
+                <span className="text-base sm:text-lg">Operates: {ground.availableTime.from} – {ground.availableTime.to}</span>
+              </div>
+            </div>
+
+            {/* Facilities Highlight */}
+            <div className="flex flex-wrap gap-2.5 pt-4">
+              {ground.amenities.map((facility) => (
+                <div
+                  key={facility}
+                  className="px-3 sm:px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm hover:border-emerald-200 transition-all cursor-default">
+                  {facilityIcons[facility] || <HomeIcon className="w-4 h-4 text-emerald-600" />}
+                  {facility}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 🏀 Sports Selection */}
-      {role !== "admin" && (
-        <div className={glassCardClasses}>
-          <h2 className="text-lg sm:text-xl font-semibold text-green-100 mb-4">
-            Select a Sport to Book
-          </h2>
-          <div className="flex flex-wrap gap-3 sm:gap-4">
-            {ground.sports.map((sport) => (
-              <button
-                key={sport.name}
-                onClick={() => {
-                  setSelectedSport(sport.name);
-                  setBookingDetails(null);
-                  setShowCalendarModal(true);
-                }}
-                className={`px-4 py-2 sm:px-5 sm:py-3 rounded-xl border font-semibold text-sm sm:text-base transition ${
-                  selectedSport === sport.name
-                    ? "bg-green-600 text-white border-green-600 scale-105"
-                    : "bg-white text-green-900 border-green-600 hover:bg-green-100 hover:text-green-900"
-                }`}>
-                {sport.name} – Rs {sport.pricePerHour}
-              </button>
-            ))}
+      {/* 🏀 Sports Selection Component */}
+      <div className={glassCardClasses}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 font-outfit">
+              Select Your Sport
+            </h2>
+            <p className="text-slate-500 font-medium mt-1">
+              Prices vary by sport. All bookings are instant.
+            </p>
           </div>
         </div>
-      )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {ground.sports.map((sport) => (
+            <button
+              key={sport.name}
+              onClick={() => {
+                setSelectedSport(sport.name);
+                setBookingDetails(null);
+                setShowCalendarModal(true);
+              }}
+              className={`group relative p-6 rounded-xl border-2 transition-all duration-300 text-left ${selectedSport === sport.name
+                ? "bg-emerald-600 border-emerald-600 shadow-xl shadow-emerald-200 scale-105"
+                : "bg-white border-slate-100 hover:border-emerald-200 hover:shadow-lg"
+                }`}
+            >
+              <div
+                className={`p-3 rounded-xl w-fit mb-4 transition-colors ${selectedSport === sport.name ? "bg-white/20" : "bg-emerald-50"
+                  }`}
+              >
+                <span className="text-2xl">
+                  {sport.name === "Cricket"
+                    ? "🏏"
+                    : sport.name === "Football"
+                      ? "⚽"
+                      : sport.name === "Badminton"
+                        ? "🏸"
+                        : "🏃"}
+                </span>
+              </div>
+              <h3
+                className={`text-lg font-bold transition-colors ${selectedSport === sport.name ? "text-white" : "text-slate-900"
+                  }`}
+              >
+                {sport.name}
+              </h3>
+              <p
+                className={`text-sm font-semibold mt-1 transition-colors ${selectedSport === sport.name ? "text-white/80" : "text-emerald-700"
+                  }`}
+              >
+                Rs {sport.pricePerHour}{" "}
+                <span className="text-[10px] opacity-60">/ HR</span>
+              </p>
+              <div
+                className={`absolute top-4 right-4 transition-opacity ${selectedSport === sport.name ? "opacity-100" : "opacity-0"
+                  }`}
+              >
+                <div className="w-6 h-6 bg-white rounded-xl flex items-center justify-center">
+                  <CheckIcon className="w-4 h-4 text-emerald-600" />
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* 📅 Calendar Modal */}
       {showCalendarModal && selectedSport && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl w-11/12 max-w-lg p-6 relative">
+          <div className="bg-white rounded-xl w-11/12 max-w-lg p-6 relative">
             <button
               onClick={() => setShowCalendarModal(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
@@ -274,8 +362,8 @@ export default function UserGroundDetails() {
             <Calendar
               groundId={id}
               groundName={ground.name}
-              onSlotClick={(date, times) => {
-                setBookingDetails({ date, times });
+              onConfirmBookings={(bookings) => {
+                setBookingDetails({ bookings });
                 setShowCalendarModal(false);
                 setShowPaymentModal(true);
               }}
@@ -287,7 +375,7 @@ export default function UserGroundDetails() {
       {/* 💳 Payment Modal */}
       {showPaymentModal && bookingDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl w-11/12 max-w-md p-6 relative">
+          <div className="bg-white rounded-xl w-11/12 max-w-md p-6 relative">
             <button
               onClick={() => setShowPaymentModal(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
@@ -299,8 +387,7 @@ export default function UserGroundDetails() {
                 sportName: selectedSport || "",
                 groundName: ground.name,
                 location: ground.location.address,
-                date: bookingDetails.date,
-                times: bookingDetails.times,
+                bookings: bookingDetails.bookings,
               }}
               amount={calculateAmount()}
               onPaymentSuccess={() => {
@@ -315,37 +402,66 @@ export default function UserGroundDetails() {
       )}
 
       {/* 🧾 Admin Edit Modal */}
-      {showEditModal && ground && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl w-11/12 max-w-3xl p-6 relative">
-            <button
+      <AnimatePresence>
+        {showEditModal && ground && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setShowEditModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-              <XMarkIcon className="w-6 h-6" />
-            </button>
-            <h3 className="text-xl font-semibold mb-4">Edit Ground Details</h3>
-            <AddGroundForm
-              ground={{
-                id: ground._id || "",
-                name: ground.name,
-                location: ground.location.address,
-                latitude: String(ground.location.lat),
-                longitude: String(ground.location.lng),
-                open_from: ground.availableTime.from,
-                open_to: ground.availableTime.to,
-                facilities: ground.amenities.join(", "),
-                phone_no: "", // if not available, can leave empty or add default
-                court_type: "Outdoor", // default value or fetch from API if exists
-                sports: ground.sports.map((s) => s.name),
-                priceList: ground.sports.map((s) => s.pricePerHour),
-                images: ground.images,
-              }}
-              isEditing={true}
-              onClose={() => setShowEditModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
             />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]"
+            >
+              {/* Header */}
+              <div className="p-8 pb-4 flex items-center justify-between border-b border-slate-50 flex-shrink-0">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">
+                    Update Arena
+                  </h3>
+                  <p className="text-slate-500 text-sm font-medium mt-1">
+                    Modify facility details and operational settings
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="w-12 h-12 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-2xl transition-all"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+                <AddGroundForm
+                  ground={{
+                    id: ground._id || "",
+                    name: ground.name,
+                    location: ground.location.address,
+                    latitude: String(ground.location.lat),
+                    longitude: String(ground.location.lng),
+                    open_from: ground.availableTime.from,
+                    open_to: ground.availableTime.to,
+                    facilities: ground.amenities.join(", "),
+                    phone_no: "", // if not available, can leave empty or add default
+                    court_type: "Outdoor", // default value or fetch from API if exists
+                    sports: ground.sports.map((s) => s.name),
+                    priceList: ground.sports.map((s) => s.pricePerHour),
+                    images: ground.images,
+                  }}
+                  isEditing={true}
+                  onClose={() => setShowEditModal(false)}
+                />
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

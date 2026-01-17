@@ -8,12 +8,12 @@ interface Admin {
   _id: string;
   name: string;
   email: string;
-  phone_no?: string;
-  nic_no?: string;
+  phone?: string;
+  nicNumber?: string;
   address?: string;
-  bank_name?: string;
-  account_no?: string;
-  branch?: string;
+  bankName?: string;
+  accountNumber?: string;
+  branchName?: string;
   image?: string;
   managingGround?: string;
 }
@@ -82,54 +82,93 @@ export default function AdminProfile() {
 
   // Check if personal/bank details exist
   const hasPersonalDetails =
-    admin.phone_no || admin.nic_no || admin.address || admin.managingGround;
-  const hasBankDetails = admin.bank_name || admin.account_no || admin.branch;
+    admin.phone || admin.nicNumber || admin.address || admin.managingGround;
+  const hasBankDetails = admin.bankName || admin.accountNumber || admin.branchName;
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto mt-10">
-      <div className="flex flex-col items-center mb-6">
-        <Image
-          src={admin.image || "/default-avatar.png"}
-          alt={admin.name}
-          width={96}
-          height={96}
-          className="w-24 h-24 rounded-full border border-gray-300 shadow-md mb-3 object-cover"
-        />
-        <h1 className="text-2xl font-bold text-indigo-700">{admin.name}</h1>
-        <p className="text-gray-500">{admin.email}</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl max-w-2xl mx-auto border border-slate-100 animate-slideUp overflow-hidden">
+        <div className="max-h-[85vh] overflow-y-auto custom-scrollbar pr-2">
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-emerald-50 shadow-lg mb-4">
+              <Image
+                src={admin.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.name)}&background=10b981&color=fff&bold=true`}
+                alt={admin.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">{admin.name}</h1>
+            <p className="text-emerald-600 font-bold uppercase tracking-widest text-xs mt-1">{admin.email}</p>
+          </div>
 
-      {/* 🧍 Personal Info Section */}
-      <div className="space-y-2 text-gray-700 mb-6">
-        <h3 className="text-lg font-semibold text-indigo-700 mb-1">
-          Personal Details
-        </h3>
-        {hasPersonalDetails ? (
-          <>
-            {renderField("Phone", admin.phone_no)}
-            {renderField("NIC", admin.nic_no)}
-            {renderField("Address", admin.address)}
-            {renderField("Managing Ground", admin.managingGround)}
-          </>
-        ) : (
-          <p className="text-gray-400 italic">No personal details provided</p>
-        )}
-      </div>
+          <div className="space-y-10">
+            {/* 🧍 Personal Info Section */}
+            <div className="space-y-4">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+                <span className="w-8 h-px bg-slate-100"></span> Personal Credentials
+              </h3>
+              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
+                {hasPersonalDetails ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {admin.phone && (
+                      <div>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Contact Line</label>
+                        <p className="font-bold text-slate-700">{admin.phone}</p>
+                      </div>
+                    )}
+                    {admin.nicNumber && (
+                      <div>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Identity (NIC)</label>
+                        <p className="font-bold text-slate-700">{admin.nicNumber}</p>
+                      </div>
+                    )}
+                    {admin.address && (
+                      <div className="sm:col-span-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Registered Address</label>
+                        <p className="font-bold text-slate-700">{admin.address}</p>
+                      </div>
+                    )}
+                    {admin.managingGround && (
+                      <div className="sm:col-span-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">Primary Facility</label>
+                        <p className="font-bold text-emerald-600">{admin.managingGround}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 italic text-sm">No personal credentials on record</p>
+                )}
+              </div>
+            </div>
 
-      {/* 🏦 Bank Info Section */}
-      <div className="border-t pt-4">
-        <h3 className="text-lg font-semibold mb-2 text-indigo-700">
-          Bank Details
-        </h3>
-        {hasBankDetails ? (
-          <>
-            {renderField("Bank Name", admin.bank_name)}
-            {renderField("Account No", admin.account_no)}
-            {renderField("Branch", admin.branch)}
-          </>
-        ) : (
-          <p className="text-gray-400 italic">No bank details provided</p>
-        )}
+            {/* 🏦 Bank Info Section */}
+            <div className="space-y-4">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+                <span className="w-8 h-px bg-slate-100"></span> Settlement Portfolio
+              </h3>
+              <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100/50 space-y-4">
+                {hasBankDetails ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="sm:col-span-2 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-lg">🏦</div>
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-widest text-emerald-900">{admin.bankName}</p>
+                        <p className="text-[10px] font-bold text-emerald-600">{admin.branchName || "Main Branch"}</p>
+                      </div>
+                    </div>
+                    <div className="sm:col-span-2 bg-white/60 p-4 rounded-2xl border border-emerald-100">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-emerald-400 block mb-0.5">Account Number</label>
+                      <p className="font-black text-slate-800 tracking-tight text-lg">{admin.accountNumber}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-400 italic text-sm">No settlement details configured</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -52,66 +52,79 @@ export default function SuperAdminSummaryTab() {
 
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-500">Loading stats...</div>
+      <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+        <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-[10px]">Aggregating Platform Data</p>
+      </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="text-center py-10 text-red-500">Failed to load stats</div>
+      <div className="text-center py-20 bg-red-50 rounded-[2rem] border border-red-100">
+        <p className="text-red-500 font-bold">Failed to synchronize platform statistics.</p>
+      </div>
     );
   }
 
   const summaryCards = [
     {
-      title: "Total Admins",
+      title: "Active Administrators",
+      description: "Verified facility operators",
       value: stats.totalAdmins ?? 0,
-      color: "indigo",
+      icon: "👤",
       visible: stats.role === "super_admin",
     },
     {
-      title: "Total Grounds",
+      title: "Registered Grounds",
+      description: "Total listed facilities",
       value: stats.totalGrounds ?? 0,
-      color: "green",
+      icon: "🏟️",
       visible: true,
     },
     {
-      title: "Weekly Bookings",
+      title: "Weekly Velocity",
+      description: "Reservations last 7 days",
       value: stats.weeklyBookings ?? 0,
-      color: "blue",
+      icon: "📈",
       visible: stats.role === "super_admin",
     },
     {
-      title: "Monthly Bookings",
+      title: "Monthly Volume",
+      description: "Reservations last 30 days",
       value: stats.monthlyBookings ?? 0,
-      color: "blue",
+      icon: "📅",
       visible: stats.role === "super_admin",
     },
     {
-      title: "Total Revenue",
+      title: "Platform Revenue",
+      description: "Gross settlement volume",
       value: `Rs. ${stats.totalRevenue.toLocaleString()}`,
-      color: "blue",
+      icon: "💰",
       visible: true,
     },
   ].filter((card) => card.visible);
 
-  const colorMap: Record<string, string> = {
-    indigo: "text-indigo-600",
-    green: "text-green-600",
-    blue: "text-blue-600",
-  };
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       {summaryCards.map((card, idx) => (
         <div
           key={idx}
-          className="bg-white p-6 rounded-xl hover:shadow-lg transition cursor-default"
+          className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-default"
         >
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          <div className="flex justify-between items-start mb-6">
+            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-xl group-hover:bg-emerald-50 group-hover:scale-110 transition-all duration-500">
+              {card.icon}
+            </div>
+            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-md">Live Data</span>
+          </div>
+
+          <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-1">
             {card.title}
           </h3>
-          <p className={`text-2xl font-bold ${colorMap[card.color]}`}>
+          <p className="text-xs text-slate-400 font-medium mb-4">{card.description}</p>
+
+          <p className="text-3xl font-black text-slate-800 group-hover:text-emerald-600 transition-colors">
             {card.value}
           </p>
         </div>

@@ -25,7 +25,16 @@ export async function POST(req: Request) {
     const body: RegisterBody = await req.json();
 
     // Prefix unused variables with _ to silence warning
-    const { name: _name, email: _email, password, role, token } = body;
+    const { name: _name, email, password, role, token } = body;
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "A user with this email already exists" },
+        { status: 400 }
+      );
+    }
 
     // Check if Super Admin exists
     const existingSuper = await User.findOne({ role: "super_admin" });

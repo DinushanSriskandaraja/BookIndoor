@@ -109,25 +109,75 @@ export async function GET(req: Request) {
       ]);
     }
 
+    const url = new URL(req.url);
+    const groundFilter = url.searchParams.get("ground");
+
     if (userRole === "admin") {
-      const ownedGrounds = await Ground.find({ owner: userId }).select("_id");
-      const ownedGroundIds = ownedGrounds.map((g) => g._id);
+      const ownedGrounds = await Ground.find({ owner: userId }).select("_id name");
+      const ownedGroundIds = ownedGrounds.map((g) => g._id.toString());
       totalGrounds = ownedGrounds.length;
 
-      totalBookings = await Booking.countDocuments({
-        ground: { $in: ownedGroundIds },
-      });
+      let query: any = { ground: { $in: ownedGroundIds } };
+      if (groundFilter) {
+        if (!ownedGroundIds.includes(groundFilter)) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+        query = { ground: groundFilter };
+      }
 
-      const revenueAgg = await Booking.aggregate<{ _id: null; total: number }>([
-        {
-          $match: {
-            ground: { $in: ownedGroundIds },
-            paymentStatus: "fully_paid",
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
-      ]);
-      totalRevenue = revenueAgg[0]?.total || 0;
+      const getStatsForBookings = (bookings: any[]) => {
+        const getStatsForPeriod = (startDate: Date) => {
+          const filtered = bookings.filter((b) => new Date(b.createdAt) >= startDate);
+          const income = filtered
+            .filter((b) => b.paymentStatus === "full_paid")
+            .reduce((sum, b) => sum + b.totalAmount, 0);
+
+          const sports: Record<string, number> = {};
+          filtered.forEach(b => {
+            sports[b.sportName] = (sports[b.sportName] || 0) + 1;
+          });
+
+          return { income, totalBookings: filtered.length, sports };
+        };
+
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+        return {
+          weekly: getStatsForPeriod(startOfWeek),
+          monthly: getStatsForPeriod(startOfMonth),
+          yearly: getStatsForPeriod(startOfYear),
+        };
+      };
+
+      const adminBookings = await Booking.find(query);
+      totalBookings = adminBookings.length;
+
+      let perGroundBreakdown: any[] = [];
+      if (!groundFilter) {
+        perGroundBreakdown = ownedGrounds.map(g => {
+          const groundBookings = adminBookings.filter(b => b.ground.toString() === g._id.toString());
+          return {
+            groundId: g._id,
+            groundName: g.name,
+            totalRevenue: groundBookings
+              .filter(b => b.paymentStatus === "full_paid")
+              .reduce((sum, b) => sum + b.totalAmount, 0),
+            totalBookings: groundBookings.length,
+            summary: getStatsForBookings(groundBookings)
+          };
+        });
+      }
+
+      return NextResponse.json({
+        role: userRole,
+        totalGrounds,
+        totalRevenue: adminBookings
+          .filter(b => b.paymentStatus === "full_paid")
+          .reduce((sum, b) => sum + b.totalAmount, 0),
+        totalBookings,
+        summary: getStatsForBookings(adminBookings),
+        groundWiseStats: perGroundBreakdown
+      });
     }
 
     return NextResponse.json({
