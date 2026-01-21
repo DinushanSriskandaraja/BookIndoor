@@ -176,9 +176,13 @@ export default function AdminPage() {
       alert("Booking created successfully!");
       // Optionally refresh bookings or clear selection
       // You might want to trigger a refresh of the Calendar or BookingDetailsTab
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Booking Error:", err);
-      alert(err.message || "Failed to create booking");
+      if (err instanceof Error) {
+        alert(err.message || "Failed to create booking");
+      } else {
+        alert("Failed to create booking");
+      }
     }
   };
 

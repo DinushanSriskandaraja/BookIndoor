@@ -25,7 +25,7 @@ export default function AboutSection() {
           <p className="max-w-3xl mx-auto text-lg md:text-xl text-slate-500 leading-relaxed font-medium">
             BookIndoor is the premier platform for professional-grade indoor sports arenas.
             We bridge the gap between passion and performance, offering seamless access to
-            the city's most exclusive futsal, badminton, and basketball venues.
+            the city&apos;s most exclusive futsal, badminton, and basketball venues.
             <span className="block mt-4 text-emerald-700 font-bold">Play smarter, compete harder.</span>
           </p>
         </motion.div>

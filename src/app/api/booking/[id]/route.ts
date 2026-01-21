@@ -27,7 +27,7 @@ export async function PUT(
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const updateData: any = {};
+        const updateData: Record<string, any> = {};
         if (paymentStatus) updateData.paymentStatus = paymentStatus;
         if (bookingStatus) updateData.status = bookingStatus;
 
@@ -42,7 +42,7 @@ export async function PUT(
         }
 
         return NextResponse.json(booking);
-    } catch (err) {
+    } catch (err: unknown) {
         console.error("Update Booking Error:", err);
         return NextResponse.json(
             { error: "Failed to update booking" },

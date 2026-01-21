@@ -23,7 +23,6 @@ import {
   FaLightbulb,
   FaWifi,
   FaTruck,
-  FaHeart,
   FaLock,
   FaGlassWater
 } from "react-icons/fa6";
@@ -35,7 +34,7 @@ import AddGroundForm from "@/components/AddGroundForm"; // ✅ Import existing f
 async function getUserRole(): Promise<"admin" | "super_admin" | "user" | null> {
   try {
     const role = localStorage.getItem("user");
-    return (role as any) ?? null;
+    return (role as "admin" | "super_admin" | "user") ?? null;
   } catch (err) {
     console.error("Failed to fetch user role:", err);
     return null;

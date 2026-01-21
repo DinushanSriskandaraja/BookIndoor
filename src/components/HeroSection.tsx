@@ -72,7 +72,7 @@ export default function HeroSection() {
 
             {/* Premium Text Context */}
             <p className="text-xs md:text-xl text-emerald-50/90 mb-12 leading-relaxed max-w-3xl font-medium tracking-wide drop-shadow-md">
-              Experience exclusive access to the city's finest private arenas.
+              Experience exclusive access to the city&apos;s finest private arenas.
               Discover, book, and compete in the ultimate professional settings with ease.
             </p>
 
@@ -82,7 +82,7 @@ export default function HeroSection() {
                 href="/user"
                 className="group relative w-full sm:w-auto px-16 py-6 text-2xl font-black text-slate-950 rounded-2xl bg-emerald-400 hover:bg-emerald-300 transition-all duration-300 hover:scale-[1.05] active:scale-95 text-center shadow-[0_20px_50px_-10px_rgba(16,185,129,0.5)]"
               >
-                Start Your Game
+                Let&apos;s Book Your Game
               </Link>
               <Link
                 href="#about"

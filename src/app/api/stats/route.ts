@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import Ground from "@/models/Grounds";
-import Booking from "@/models/Booking";
+import Booking, { IBooking } from "@/models/Booking";
 import { verifyToken } from "@/lib/auth";
 
 interface DecodedToken {
@@ -117,7 +117,7 @@ export async function GET(req: Request) {
       const ownedGroundIds = ownedGrounds.map((g) => g._id.toString());
       totalGrounds = ownedGrounds.length;
 
-      let query: any = { ground: { $in: ownedGroundIds } };
+      let query: Record<string, any> = { ground: { $in: ownedGroundIds } };
       if (groundFilter) {
         if (!ownedGroundIds.includes(groundFilter)) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -125,7 +125,7 @@ export async function GET(req: Request) {
         query = { ground: groundFilter };
       }
 
-      const getStatsForBookings = (bookings: any[]) => {
+      const getStatsForBookings = (bookings: IBooking[]) => {
         const getStatsForPeriod = (startDate: Date) => {
           const filtered = bookings.filter((b) => new Date(b.createdAt) >= startDate);
           const income = filtered
@@ -152,7 +152,7 @@ export async function GET(req: Request) {
       const adminBookings = await Booking.find(query);
       totalBookings = adminBookings.length;
 
-      let perGroundBreakdown: any[] = [];
+      let perGroundBreakdown: Record<string, any>[] = [];
       if (!groundFilter) {
         perGroundBreakdown = ownedGrounds.map(g => {
           const groundBookings = adminBookings.filter(b => b.ground.toString() === g._id.toString());

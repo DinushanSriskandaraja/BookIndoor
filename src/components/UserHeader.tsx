@@ -1,6 +1,8 @@
 "use client";
 
+
 import Link from "next/link";
+import Image from "next/image";
 import { UserIcon } from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,9 +29,11 @@ export default function Header() {
       <div className="container mx-auto flex items-center justify-between px-6 sm:px-10 py-5">
         {/* Logo / Brand */}
         <Link href="/" className="flex items-center group">
-          <img
+          <Image
             src="/images/BookindoorLogo.png"
             alt="BookIndoor Logo"
+            width={150}
+            height={56}
             className="h-14 w-auto object-contain transition-transform group-hover:scale-105"
           />
         </Link>

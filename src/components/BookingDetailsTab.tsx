@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { EyeIcon, CalendarIcon, XMarkIcon, CheckCircleIcon, ClockIcon, PhoneIcon, UserIcon, MapPinIcon } from "@heroicons/react/24/outline";
 
 interface Booking {
-  id: number;
+  id: number | string;
   name: string;
   phone: string;
   nic: string;
@@ -21,6 +21,18 @@ interface BookingDetailsTabProps {
   selectedSport?: string;
   groundId?: string;
   bookings?: Booking[];
+}
+
+interface APIBooking {
+  _id: string;
+  guest?: { name: string; phone: string; nicNumber: string };
+  date: string;
+  timeSlots: { startTime: string }[];
+  status: string;
+  paymentStatus: string;
+  createdAt: string;
+  sportName: string;
+  ground?: { name: string };
 }
 
 const defaultBookings: Booking[] = [
@@ -71,14 +83,14 @@ export default function BookingDetailsTab({
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch bookings");
 
-        const data = await res.json();
-        const mapped: Booking[] = data.map((b: any) => ({
+        const data: APIBooking[] = await res.json();
+        const mapped: Booking[] = data.map((b) => ({
           id: b._id,
           name: b.guest?.name || "Member",
           phone: b.guest?.phone || "N/A",
           nic: b.guest?.nicNumber || "N/A",
           date: b.date,
-          timeSlot: b.timeSlots.map((ts: any) => ts.startTime).join(", "),
+          timeSlot: b.timeSlots.map((ts) => ts.startTime).join(", "),
           bookingStatus: b.status === "confirmed" ? "Confirmed" : "Reserved",
           paymentStatus: b.paymentStatus === "full_paid" ? "Paid" : b.paymentStatus === "advanced_paid" ? "Advanced Paid" : "Pending",
           createdAt: new Date(b.createdAt).toLocaleDateString(),
@@ -110,7 +122,7 @@ export default function BookingDetailsTab({
     }, {} as Record<string, Booking[]>)
     : null;
 
-  const updatePaymentStatus = async (bookingId: number, newStatus: string) => {
+  const updatePaymentStatus = async (bookingId: number | string, newStatus: string) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;

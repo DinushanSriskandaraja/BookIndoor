@@ -97,9 +97,9 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, ground });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Ground Creation Error:", err);
-    if (err.name === "ValidationError") {
+    if (err instanceof Error && err.name === "ValidationError") {
       return NextResponse.json(
         { error: "Validation Failed", details: err.message },
         { status: 400 }

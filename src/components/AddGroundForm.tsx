@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import Image from "next/image";
+import { useState, useRef, useEffect, ChangeEvent, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 interface Sport {
   sport: string;
@@ -156,7 +155,7 @@ export default function AddGroundForm({
   // ✅ Handle images
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files) as File[];
     setFormData((prev) => ({ ...prev, images: [...prev.images, ...files] }));
     setPreviewImages((prev) => [
       ...prev,

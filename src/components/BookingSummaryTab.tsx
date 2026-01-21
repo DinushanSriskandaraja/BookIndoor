@@ -9,9 +9,23 @@ interface BookingSummaryTabProps {
 
 import React, { useState, useEffect } from "react";
 
+
+interface SummaryStats {
+  income: number;
+  totalBookings: number;
+  sports: Record<string, number>;
+}
+
+interface GroundStat {
+  groundId: string;
+  groundName: string;
+  totalRevenue: number;
+  summary: Record<string, SummaryStats>;
+}
+
 export default function BookingSummaryTab({ selectedSport, groundId }: BookingSummaryTabProps) {
-  const [summaryData, setSummaryData] = useState<any>(null);
-  const [groundWiseStats, setGroundWiseStats] = useState<any[]>([]);
+  const [summaryData, setSummaryData] = useState<Record<string, SummaryStats> | null>(null);
+  const [groundWiseStats, setGroundWiseStats] = useState<GroundStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,9 +72,9 @@ export default function BookingSummaryTab({ selectedSport, groundId }: BookingSu
     </div>
   );
 
-  const renderSummaryCards = (data: any) => (
+  const renderSummaryCards = (data: Record<string, SummaryStats>) => (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      {Object.entries(data).map(([period, stats]: [string, any]) => (
+      {Object.entries(data).map(([period, stats]: [string, SummaryStats]) => (
         <div key={period} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex flex-col items-center text-center space-y-4">
             <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full uppercase tracking-widest">
@@ -81,7 +95,7 @@ export default function BookingSummaryTab({ selectedSport, groundId }: BookingSu
             </div>
 
             <div className="w-full space-y-1.5 pt-1">
-              {Object.entries(stats.sports || {}).map(([sport, count]: [string, any]) => (
+              {Object.entries(stats.sports || {}).map(([sport, count]) => (
                 <div
                   key={sport}
                   className={`flex justify-between items-center text-[10px] p-2 rounded-lg transition-colors ${selectedSport === sport

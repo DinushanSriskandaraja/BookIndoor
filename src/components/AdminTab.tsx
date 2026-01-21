@@ -20,13 +20,21 @@ interface Admin {
   managingGround?: string;
 }
 
+interface Ground {
+  _id: string;
+  name: string;
+  images: string[];
+  location: string | { address: string };
+  sports: { name: string }[];
+}
+
 export default function AdminTab() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedAdminId, setSelectedAdminId] = useState<string | null>(null);
-  const [adminDetails, setAdminDetails] = useState<{ admin: Admin; grounds: any[] } | null>(null);
+  const [adminDetails, setAdminDetails] = useState<{ admin: Admin; grounds: Ground[] } | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [token, setToken] = useState("");
 
@@ -330,16 +338,16 @@ export default function AdminTab() {
                     </h4>
                     <div className="space-y-4">
                       {adminDetails.grounds && adminDetails.grounds.length > 0 ? (
-                        adminDetails.grounds.map((ground: any) => (
+                        adminDetails.grounds.map((ground: Ground) => (
                           <div key={ground._id} className="flex items-center gap-4 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
                             <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
                               <img src={ground.images?.[0] || "/placeholder.png"} alt={ground.name} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h5 className="font-bold text-slate-900 truncate group-hover:text-emerald-700 transition-colors">{ground.name}</h5>
-                              <p className="text-xs text-slate-500 truncate mt-1">{ground.location?.address || ground.location}</p>
+                              <p className="text-xs text-slate-500 truncate mt-1">{typeof ground.location === 'object' ? ground.location.address : ground.location}</p>
                               <div className="flex gap-1.5 mt-2">
-                                {ground.sports?.slice(0, 2).map((s: any) => (
+                                {ground.sports?.slice(0, 2).map((s: { name: string }) => (
                                   <span key={s.name} className="px-2 py-0.5 bg-slate-50 text-slate-400 text-[9px] font-black uppercase rounded-md tracking-tighter">{s.name}</span>
                                 ))}
                                 {ground.sports?.length > 2 && <span className="text-[9px] font-bold text-slate-300">+{ground.sports.length - 2} more</span>}

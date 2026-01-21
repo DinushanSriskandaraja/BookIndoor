@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import GroundCard, { Ground as BaseGround } from "@/components/GroundCard";
 import GroundFilter from "@/components/GroundFilter";
 
@@ -33,7 +32,6 @@ export default function UserPage() {
     location: "",
     sport: "",
   });
-  const router = useRouter();
 
   useEffect(() => {
     const fetchGrounds = async () => {
@@ -89,13 +87,7 @@ export default function UserPage() {
     });
   }, [grounds, filters]);
 
-  // ✅ Logout function
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("id");
-    router.push("/login"); // ✅ Redirect to login page
-  };
+
 
   return (
     <div className="min-h-screen w-full bg-white text-gray-900 flex flex-col overflow-x-hidden">

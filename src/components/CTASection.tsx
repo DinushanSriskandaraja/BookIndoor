@@ -21,7 +21,7 @@ export default function CTASection() {
             the Indoor Court?
           </h2>
           <p className="text-slate-500 mb-12 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
-            Join the elite community of players booking the city's finest arenas.
+            Join the elite community of players booking the city&apos;s finest arenas.
             Your next champion moment starts with a single click.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">

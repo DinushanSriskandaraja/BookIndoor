@@ -6,10 +6,10 @@ import { verifyToken } from "@/lib/auth";
 type Params = { params: { id: string } };
 
 // Define a safe error interface
-interface AppError extends Error {
-  name: string;
-  errors?: Record<string, unknown>;
-}
+// interface AppError extends Error {
+//   name: string;
+//   errors?: Record<string, unknown>;
+// }
 
 /** ✅ GET GROUND BY ID **/
 export async function GET(
@@ -149,9 +149,9 @@ export async function PUT(
 
     await ground.save();
     return NextResponse.json({ success: true, ground });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Ground Update Error:", err);
-    if (err.name === "ValidationError") {
+    if (err instanceof Error && err.name === "ValidationError") {
       return NextResponse.json({ error: "Validation Failed", details: err.message }, { status: 400 });
     }
     return NextResponse.json(

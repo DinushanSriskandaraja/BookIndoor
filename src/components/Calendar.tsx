@@ -22,7 +22,7 @@ const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function Calendar({
   groundId,
-  groundName,
+  // groundName,
   isAdmin = false,
   onConfirmBookings,
   sports = [],
@@ -46,7 +46,7 @@ export default function Calendar({
     if (sports.length > 0 && !selectedSport) {
       setSelectedSport(sports[0]);
     }
-  }, [sports]);
+  }, [sports, selectedSport]);
 
   // ✅ Fetch available slots for selected date
   useEffect(() => {
@@ -354,7 +354,7 @@ export default function Calendar({
 
                 <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-slate-100 gap-4">
                   <p className="text-xs text-slate-400 font-medium italic">
-                    * Multi-date selection is enabled. Tap "Done" to pick more dates.
+                    * Multi-date selection is enabled. Tap &quot;Done&quot; to pick more dates.
                   </p>
                   <button
                     onClick={() => setShowTimePicker(false)}

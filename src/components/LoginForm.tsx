@@ -10,7 +10,7 @@ interface LoginFormProps {
     onClose?: () => void;
 }
 
-export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
+export default function LoginForm({ onSuccess }: LoginFormProps) {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

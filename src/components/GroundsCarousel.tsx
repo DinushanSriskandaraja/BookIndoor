@@ -49,7 +49,7 @@ export default function GroundsCarousel() {
           </h2>
         </div>
         <p className="text-slate-500 font-medium max-w-sm">
-          Join thousands of athletes playing at the city's most requested indoor facilities.
+          Join thousands of athletes playing at the city&apos;s most requested indoor facilities.
         </p>
       </div>
 
