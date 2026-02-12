@@ -17,8 +17,10 @@ interface BookingSummary {
 
 interface BookingResponse {
   bookingIds: string[];
+  paymentGroupId?: string;
   message?: string;
   error?: string;
+  amount?: number;
 }
 
 interface PaymentFormProps {
@@ -33,6 +35,8 @@ interface UserDetails {
   phone: string;
   nic: string;
   email: string;
+  address: string;
+  city: string;
 }
 
 // ✅ Keys type for iteration
@@ -48,6 +52,8 @@ export default function PaymentForm({
     phone: "",
     nic: "",
     email: "",
+    address: "",
+    city: "",
   });
 
   const [isAdvance, setIsAdvance] = useState(false);
@@ -64,6 +70,75 @@ export default function PaymentForm({
   const finalAmount = isAdvance ? amount * 0.5 : amount;
   const toggleAdvancePayment = () => setIsAdvance((prev) => !prev);
 
+  const handlePayHerePayment = async (orderId: string, amount: number) => {
+    try {
+      // 1. Generate Hash
+      // orderId is now the paymentGroupId (or single booking ID)
+      const currency = "LKR";
+
+      const hashResponse = await fetch("/api/payhere/hash", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: orderId,
+          amount: amount,
+          currency: currency,
+        }),
+      });
+
+      const hashData = await hashResponse.json();
+
+      if (!hashData.hash) {
+        throw new Error("Failed to generate payment hash");
+      }
+
+      // 2. Prepare PayHere Form Data
+      const payhereParams = {
+        merchant_id: hashData.merchantId,
+        return_url: `${window.location.origin}/booking/success`,
+        cancel_url: `${window.location.origin}/booking/cancel`,
+        notify_url: `${window.location.origin}/api/payhere/notify`,
+        order_id: orderId,
+        items: `Ground Booking - ${bookingDetails.groundName}`,
+        currency: currency,
+        amount: amount.toFixed(2),
+        first_name: userDetails.name.split(" ")[0],
+        last_name: userDetails.name.split(" ").slice(1).join(" ") || "",
+        email: userDetails.email,
+        phone: userDetails.phone,
+        address: userDetails.address,
+        city: userDetails.city,
+        country: "Sri Lanka",
+        hash: hashData.hash,
+        custom_1: isAdvance ? "advance" : "full", // Pass payment type
+        custom_2: "",
+      };
+
+      // 3. Submit Form programmatically
+      const form = document.createElement("form");
+      form.setAttribute("method", "POST");
+      form.setAttribute("action", "https://sandbox.payhere.lk/pay/checkout"); // Use sandbox for testing
+      // For production, use: https://www.payhere.lk/pay/checkout
+
+      for (const key in payhereParams) {
+        if (Object.prototype.hasOwnProperty.call(payhereParams, key)) {
+          const hiddenField = document.createElement("input");
+          hiddenField.setAttribute("type", "hidden");
+          hiddenField.setAttribute("name", key);
+          hiddenField.setAttribute("value", payhereParams[key as keyof typeof payhereParams]);
+          form.appendChild(hiddenField);
+        }
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (error) {
+      console.error("PayHere Error:", error);
+      alert("Failed to initiate payment. Please try again.");
+      setLoading(false);
+    }
+  };
+
   const handleBooking = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -71,9 +146,11 @@ export default function PaymentForm({
       !userDetails.name ||
       !userDetails.phone ||
       !userDetails.nic ||
-      !userDetails.email
+      !userDetails.email ||
+      !userDetails.address ||
+      !userDetails.city
     ) {
-      alert("Please fill in all your details including email.");
+      alert("Please fill in all your details including address and city.");
       return;
     }
 
@@ -83,7 +160,7 @@ export default function PaymentForm({
       // Step 0: Get token
       const token = localStorage.getItem("token");
 
-      // Step 1: Create booking
+      // Step 1: Create booking with "pending" status
       const response = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,12 +172,13 @@ export default function PaymentForm({
             name: userDetails.name,
             phone: userDetails.phone,
             nicNumber: userDetails.nic,
+            email: userDetails.email,
           },
           bookings: bookingDetails.bookings.map((b) => ({
             date: b.date,
             timeSlots: b.times.map((t) => ({ startTime: t })),
           })),
-          paymentStatus: isAdvance ? "advanced_paid" : "full_paid",
+          paymentStatus: "pending", // Initially pending
         }),
       });
 
@@ -111,48 +189,22 @@ export default function PaymentForm({
         return;
       }
 
-      console.log("✅ Bookings created successfully:", data);
+      console.log("✅ Booking Created (Pending Payment):", data);
 
-      // Step 2: Send confirmation emails
-      const isSingleDate = bookingDetails.bookings.length === 1;
-      const bookingDateParam = isSingleDate ? bookingDetails.bookings[0].date : "Multiple Dates";
-      const bookingTimeParam = isSingleDate
-        ? bookingDetails.bookings[0].times.join(", ")
-        : bookingDetails.bookings.map((b) => `${b.date}: ${b.times.join(", ")}`).join("\n");
-
-      const emailResponse = await fetch("/api/send-confirmation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userEmail: userDetails.email,
-          adminEmail: "groundadmin@example.com",
-          userName: userDetails.name,
-          groundName: bookingDetails.groundName,
-          bookingDate: bookingDateParam,
-          bookingTime: bookingTimeParam,
-          amount: `Rs.${finalAmount.toFixed(2)} (${isAdvance ? "Advance (50%)" : "Full"
-            })`,
-        }),
-      });
-
-      const emailData = await emailResponse.json();
-      console.log("📧 Email API response:", emailData);
-
-      if (!emailResponse.ok) {
-        alert("Bookings confirmed, but email failed to send.");
+      if (data.paymentGroupId) {
+        // Initiate PayHere Payment with Group ID
+        await handlePayHerePayment(data.paymentGroupId, finalAmount);
+      } else if (data.bookingIds && data.bookingIds.length > 0) {
+        // Fallback to first ID if no group ID (shouldn't happen with new API)
+        await handlePayHerePayment(data.bookingIds[0], finalAmount);
       } else {
-        alert(
-          `✅ ${isAdvance ? "Advance" : "Full"
-          } payment of Rs.${finalAmount.toFixed(2)} successful!\nBookings ID count: ${data.bookingIds.length
-          }\nConfirmation email sent!`
-        );
+        alert("Booking created but no ID returned.");
+        setLoading(false);
       }
 
-      if (onPaymentSuccess) onPaymentSuccess(data);
     } catch (err) {
       console.error("Booking Error:", err);
-      alert("Failed to complete booking. Please try again.");
-    } finally {
+      alert("Failed to create booking. Please try again.");
       setLoading(false);
     }
   };
@@ -219,17 +271,11 @@ export default function PaymentForm({
 
         {/* User Details */}
         <div className="space-y-4">
-          {(["name", "email", "phone", "nic"] as UserDetailKeys[]).map(
+          {(["name", "email", "phone", "nic", "address", "city"] as UserDetailKeys[]).map(
             (field) => (
               <div key={field}>
-                <label className="block text-green-700 font-medium mb-1">
-                  {field === "name"
-                    ? "Full Name"
-                    : field === "email"
-                      ? "Email Address"
-                      : field === "phone"
-                        ? "Phone Number"
-                        : "NIC / Passport Number"}
+                <label className="block text-green-700 font-medium mb-1 capitalize">
+                  {field === "nic" ? "NIC / Passport Number" : field}
                 </label>
                 <input
                   type={
@@ -242,16 +288,9 @@ export default function PaymentForm({
                   name={field}
                   value={userDetails[field]}
                   onChange={handleUserChange}
-                  placeholder={
-                    field === "name"
-                      ? "Enter your full name"
-                      : field === "email"
-                        ? "Enter your email address"
-                        : field === "phone"
-                          ? "Enter your phone number"
-                          : "Enter your NIC or Passport number"
-                  }
+                  placeholder={`Enter your ${field}`}
                   className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                  required
                 />
               </div>
             )
@@ -265,9 +304,7 @@ export default function PaymentForm({
         >
           {loading
             ? "Processing..."
-            : isAdvance
-              ? `Pay Rs.${finalAmount.toFixed(2)} (50% Advance)`
-              : `Pay Rs.${finalAmount.toFixed(2)} & Confirm Booking`}
+            : `Pay Rs.${finalAmount.toFixed(2)} with PayHere`}
         </button>
       </form>
     </div>

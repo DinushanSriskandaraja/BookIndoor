@@ -18,6 +18,7 @@ export interface IBooking extends Document {
   timeSlots: ITimeSlot[];
   status: "reserved" | "confirmed";
   paymentStatus: "pending" | "advanced_paid" | "full_paid";
+  paymentGroupId?: string;
   totalAmount: number;
   createdAt: Date;
 }
@@ -52,6 +53,7 @@ const BookingSchema = new Schema<IBooking>(
       enum: ["pending", "advanced_paid", "full_paid"],
       default: "advanced_paid",
     },
+    paymentGroupId: { type: String }, // ✅ ID to group bookings for single payment
     totalAmount: { type: Number, required: true },
   },
   { timestamps: true }

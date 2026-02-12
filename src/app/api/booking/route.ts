@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import dbConnect from "@/lib/mongodb";
 import Booking from "@/models/Booking";
 import Ground from "@/models/Grounds";
@@ -96,6 +97,9 @@ export async function POST(req: Request) {
     const createdBookings = [];
     let grandTotal = 0;
 
+    // ✅ Generate a unique Group ID for this transaction
+    const paymentGroupId = new mongoose.Types.ObjectId().toString();
+
     // 4️⃣ Create booking documents
     for (const item of body.bookings) {
       const slotCount = item.timeSlots.length;
@@ -111,6 +115,7 @@ export async function POST(req: Request) {
         timeSlots: item.timeSlots,
         totalAmount,
         paymentStatus,
+        paymentGroupId, // ✅ Link all bookings in this batch
         status: "reserved",
       });
       createdBookings.push(booking._id);
@@ -119,6 +124,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       bookingIds: createdBookings,
+      paymentGroupId, // ✅ Return for PayHere
       amount: grandTotal,
     });
   } catch (err: unknown) {
