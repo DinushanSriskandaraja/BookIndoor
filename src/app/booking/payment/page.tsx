@@ -52,26 +52,35 @@ export default function PaymentPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="bg-slate-50 py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
             <div className="max-w-4xl mx-auto">
-                <button
-                    onClick={() => router.back()}
-                    className="mb-8 flex items-center gap-2 text-slate-600 hover:text-emerald-600 transition-colors font-medium"
-                >
-                    <ChevronLeftIcon className="w-5 h-5" />
-                    Back to Ground Details
-                </button>
 
-                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+
+                <div className="w-full">
                     <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden">
-                        <div className="bg-emerald-600 p-8 text-white">
-                            <h1 className="text-3xl font-black font-outfit">Complete Your Booking</h1>
-                            <p className="text-emerald-100 mt-2 font-medium">
+                        <div className="bg-emerald-600 p-6 sm:p-8 text-white">
+                            <h1 className="text-2xl sm:text-3xl font-black font-outfit">Complete Your Booking</h1>
+                            <p className="text-emerald-100 mt-1 sm:mt-2 font-medium text-sm sm:base">
                                 Please review your details and proceed to payment.
                             </p>
                         </div>
 
-                        <div className="p-8">
+                        <div className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500 scrollbar-track-emerald-50/50">
+                            <style jsx>{`
+                                div::-webkit-scrollbar {
+                                    width: 6px;
+                                }
+                                div::-webkit-scrollbar-track {
+                                    background: transparent;
+                                }
+                                div::-webkit-scrollbar-thumb {
+                                    background: #10b981;
+                                    border-radius: 10px;
+                                }
+                                div::-webkit-scrollbar-thumb:hover {
+                                    background: #059669;
+                                }
+                            `}</style>
                             <PaymentForm
                                 bookingDetails={{
                                     groundId: bookingDetails.groundId,

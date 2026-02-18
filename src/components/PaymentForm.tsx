@@ -209,12 +209,11 @@ export default function PaymentForm({
   };
 
   return (
-    <div
-      className="w-full max-w-3xl mx-auto h-[90vh] overflow-y-auto rounded-2xl scrollbar-thin scrollbar-thumb-green-500 scrollbar-track-green-100"
-      style={{ scrollBehavior: "smooth" }}>
+    <div className="w-full max-w-4xl mx-auto">
       <form
         onSubmit={handleBooking}
-        className="p-8 border border-green-700/30 rounded-2xl space-y-6 bg-green-50/30 shadow-lg">
+        className="p-4 sm:p-8 border border-green-700/30 rounded-[1.5rem] sm:rounded-[2rem] space-y-6 bg-green-50/30 shadow-lg"
+      >
         {/* Booking Summary */}
         <div className="bg-green-50 p-5 rounded-xl border border-green-200 shadow-inner">
           <h3 className="font-semibold text-green-800 mb-3 text-lg">
